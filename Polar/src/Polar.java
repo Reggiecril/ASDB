@@ -9,7 +9,7 @@ import java.awt.Font;
 import java.awt.TextArea;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-
+import java.util.regex.*;
 
 public class Polar implements ActionListener {
 	JFrame frame;
@@ -19,7 +19,8 @@ public class Polar implements ActionListener {
 	JButton button;
 	FileDialog fd;
 	File file;
-	TextArea textarea;
+	TextArea textarea,textarea1;
+    private static String REGEX = "\\[(.*?)\\]";
 	Polar(){
 		
 	}
@@ -65,7 +66,9 @@ public class Polar implements ActionListener {
 		//Textarea in Frame
 		JPanel text=new JPanel();
 		textarea=new TextArea(10,100);
+		textarea1=new TextArea(30,100);
 		text.add(textarea);
+		text.add(textarea1);
 		frame.add(text);
 		
 		//Display frame in the center of window
@@ -93,13 +96,19 @@ public class Polar implements ActionListener {
             	if ((fd.getDirectory()!=null) && (fd.getFile()!=null)){
             	//get the path and file name.
             	file = new File(fd.getDirectory(),fd.getFile());
-            	
                 FileReader fr = new FileReader(file);
                 BufferedReader br = new BufferedReader(fr);
                 String aline;
+                int i=1;
                 //load file data to textarea
                 while ((aline=br.readLine()) != null){
-                textarea.append(aline+"\n");
+                	Pattern p=Pattern.compile(REGEX);
+                	Matcher m=p.matcher(aline);
+                	if(m.find()) {
+                		textarea.append(m.group(1)+"   LLines:"+i+"\n");
+                	}
+                	textarea1.append(aline+"   Lines"+i+"\n");
+                	i++;
                 }
                 fr.close();
                 br.close();}
