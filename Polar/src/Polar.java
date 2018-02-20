@@ -1,4 +1,6 @@
 import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -8,6 +10,7 @@ import java.awt.Color;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.FileDialog;
+import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.TextArea;
 import java.awt.event.ActionEvent;
@@ -15,22 +18,23 @@ import java.awt.event.ActionListener;
 import java.util.HashMap;
 import java.util.regex.*;
 
-public class Polar implements ActionListener {
+public class Polar extends JFrame implements ActionListener {
 	JFrame frame;
 	JMenuBar menuBar;
 	JMenu fileMenu, fileSpace, fileHelp;
 	JMenuItem newMenuLoad,newMenuSave,newMenuExit,newMenuAbout;
 	JButton button;
-	JLabel labelDate,labelStart,labelInterval;
+	JTable table=new JTable();
 	FileDialog fd;
 	File file;
 	TextArea textarea;
+	DefaultTableModel model =new DefaultTableModel();
     HashMap<Integer,String> allMap = new HashMap<Integer,String>();
     HashMap<String,Integer> headerMap=new HashMap<String,Integer>();
     private static String REGEX = "\\[(.*?)\\]";
     
 	Polar(){
-		
+		GUI();
 	}
 	public void GUI() {
 		frame=new JFrame();
@@ -65,20 +69,33 @@ public class Polar implements ActionListener {
 		newMenuExit.setFont(new Font("sans-serif", Font.PLAIN, 20));
 		fileMenu.add(newMenuExit);
 		newMenuExit.addActionListener(this);
-		
 		//files inside the menu bar(About ->...) 
 		newMenuAbout = new JMenuItem("About",new ImageIcon("Icon/Help.png"));
 		newMenuAbout.setFont(new Font("sans-serif", Font.PLAIN, 20));
 		fileHelp.add(newMenuAbout);
 		newMenuAbout.addActionListener(this);
 		//TextArea in Frame
-		JPanel text=new JPanel();
+		JPanel textPanel=new JPanel();
 		textarea=new TextArea("",35,150,TextArea.SCROLLBARS_VERTICAL_ONLY);
 		textarea.setEditable(false);
-		text.add(textarea);
-		contain.add(text, BorderLayout.SOUTH);
+		textPanel.add(textarea);
 		
+		//set table in panel and design
+		
+		//table data
+		String[] columns= {"Date","Start Time","Interval"};
+		model.setColumnIdentifiers(columns);
+		table.setModel(model);
+		table.setRowHeight(30);
+		table.setPreferredScrollableViewportSize(table.getPreferredSize());
+		JScrollPane scrollPane=new JScrollPane(table);
+		scrollPane.setPreferredSize(new Dimension(300,50));
+		JPanel tablePanel = new JPanel();
+		tablePanel.setPreferredSize(new Dimension(300,200));
+		tablePanel.add(scrollPane);
 		//Display frame in the center of window
+		contain.add(textPanel, BorderLayout.SOUTH);
+		contain.add(tablePanel,BorderLayout.WEST);
 		frame.pack();
 		frame.setLocationRelativeTo(null);
 		frame.setJMenuBar(menuBar);
@@ -122,10 +139,16 @@ public class Polar implements ActionListener {
                 	i++;
                 }
                 //get header data.
-                String []data=getDate("IntTimes");
+                String []data=getHeaderData("IntTimes");
                 System.out.println((int)headerMap.get("IntTimes"));
                 fr.close();
-                br.close();}
+                br.close();
+                Object []row=new Object[3];
+                row[0]=getParams().get("Date");
+                row[1]=getParams().get("StartTime");
+                row[2]=getParams().get("Interval");
+                model.addRow(row);
+            	}
                 
               }
             catch (IOException ioe){
@@ -140,8 +163,19 @@ public class Polar implements ActionListener {
 			JOptionPane.showMessageDialog(newMenuAbout, "Welcome to Polar!"+"\n"+"                        :)");
 		}
 	}
+	//get a data information array from Params
+	public HashMap<String,String> getParams(){
+		String []header=getHeaderData("Params");
+		HashMap<String,String> map = new HashMap<String,String>();
+		for(String line:header) {
+			String lineData[]=line.split("=");
+			map.put(lineData[0],lineData[1]);
+		}
+		
+		return map;
+	}
 	//get lines of a header
-	public String[] getDate(String header) {
+	public String[] getHeaderData(String header) {
 		try {
 			//Initialize a string array
 			int count=count(header);
@@ -202,6 +236,5 @@ public class Polar implements ActionListener {
 	}
 	public static void main(String [] args) {
 		Polar polar=new Polar();
-		polar.GUI();
 	}
 }
