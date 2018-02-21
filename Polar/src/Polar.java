@@ -24,15 +24,14 @@ public class Polar extends JFrame implements ActionListener {
 	JMenu fileMenu, fileSpace, fileHelp;
 	JMenuItem newMenuLoad,newMenuSave,newMenuExit,newMenuAbout;
 	JButton button;
-	JTable table=new JTable();
 	FileDialog fd;
 	File file;
 	TextArea textarea;
-	DefaultTableModel model =new DefaultTableModel();
-    HashMap<Integer,String> allMap = new HashMap<Integer,String>();
-    HashMap<String,Integer> headerMap=new HashMap<String,Integer>();
+
+	JTable table=new JTable();
+	JTable dataTable=new JTable();
     private static String REGEX = "\\[(.*?)\\]";
-    
+	Data data=new Data();
 	Polar(){
 		GUI();
 	}
@@ -79,23 +78,36 @@ public class Polar extends JFrame implements ActionListener {
 		textarea=new TextArea("",35,150,TextArea.SCROLLBARS_VERTICAL_ONLY);
 		textarea.setEditable(false);
 		textPanel.add(textarea);
-		
-		//set table in panel and design
-		
-		//table data
+		//create table panel
+		JPanel tablePanel = new JPanel();
+		tablePanel.setPreferredSize(new Dimension(1200,200));
+		//date table
 		String[] columns= {"Date","Start Time","Interval"};
-		model.setColumnIdentifiers(columns);
-		table.setModel(model);
+		data.model.setColumnIdentifiers(columns);
+		table.setModel(data.model);
 		table.setRowHeight(30);
+		table.setBackground(Color.YELLOW);
+		table.setForeground(Color.blue);
 		table.setPreferredScrollableViewportSize(table.getPreferredSize());
 		JScrollPane scrollPane=new JScrollPane(table);
-		scrollPane.setPreferredSize(new Dimension(300,50));
-		JPanel tablePanel = new JPanel();
-		tablePanel.setPreferredSize(new Dimension(300,200));
+		scrollPane.setPreferredSize(new Dimension(200,50));
 		tablePanel.add(scrollPane);
+		//body data table
+		String[] columns1= {"Time","Speed(km/h)","Cadence(rpm)","Altitude","Heart rate","Power in watts"};
+		data.dataModel.setColumnIdentifiers(columns1);
+		dataTable.setModel(data.dataModel);
+		dataTable.setRowHeight(30);
+		table.setBackground(Color.YELLOW);
+		table.setForeground(Color.blue);
+		dataTable.setPreferredScrollableViewportSize(dataTable.getPreferredSize());
+		JScrollPane scrollPane1=new JScrollPane(dataTable);
+		scrollPane1.setPreferredSize(new Dimension(1200,50));
+		tablePanel.add(scrollPane1);
+		
 		//Display frame in the center of window
 		contain.add(textPanel, BorderLayout.SOUTH);
 		contain.add(tablePanel,BorderLayout.WEST);
+		
 		frame.pack();
 		frame.setLocationRelativeTo(null);
 		frame.setJMenuBar(menuBar);
@@ -125,29 +137,25 @@ public class Polar extends JFrame implements ActionListener {
 
                 String aline;
                 int i=1;
+                textarea.setText("");
                 //load file data to TextArea
                 while ((aline=br.readLine()) != null){
                 	//collect date to HashMap
-                	allMap.put(i,aline);
+                	data.allMap.put(i,aline);
                 	//collect header information
                 	Pattern p=Pattern.compile(REGEX);
                 	Matcher m=p.matcher(aline);
                 	if(m.find()) {
-                		headerMap.put(m.group(1),i);
+                		//record the line number of each line.
+                		data.headerMap.put(m.group(1),i);
                 	}
                 	textarea.append(aline+"   LLines:"+i+"\n");
                 	i++;
                 }
-                //get header data.
-                String []data=getHeaderData("IntTimes");
-                System.out.println((int)headerMap.get("IntTimes"));
                 fr.close();
                 br.close();
-                Object []row=new Object[3];
-                row[0]=getParams().get("Date");
-                row[1]=getParams().get("StartTime");
-                row[2]=getParams().get("Interval");
-                model.addRow(row);
+                data.tableData();
+                data.getIntTimes();
             	}
                 
               }
@@ -158,82 +166,14 @@ public class Polar extends JFrame implements ActionListener {
 	
 			
 		}else if(source.getText().equals("Exit")) {
+			//exit application
 			System.exit(-1);
 		}else if(source.getText().equals("About")) {
+			//show a messagebox.
 			JOptionPane.showMessageDialog(newMenuAbout, "Welcome to Polar!"+"\n"+"                        :)");
 		}
 	}
-	//get a data information array from Params
-	public HashMap<String,String> getParams(){
-		String []header=getHeaderData("Params");
-		HashMap<String,String> map = new HashMap<String,String>();
-		for(String line:header) {
-			String lineData[]=line.split("=");
-			map.put(lineData[0],lineData[1]);
-		}
-		
-		return map;
-	}
-	//get lines of a header
-	public String[] getHeaderData(String header) {
-		try {
-			//Initialize a string array
-			int count=count(header);
-			String [] date =new String[count];
-			//get the header line number
-			int j=(int)headerMap.get(header);
-			int i=0;
-			int c=0;
-			//add line content to string array.
-			for(i=j;i<1500000;i++) {
-				String line=(String)allMap.get(i+1);
-				//if line is null ,end
-				if(line!=null) {
-					//if line is empty, turn to next.
-					if(line.trim().isEmpty()) continue;
-					//if line is header, end
-					Pattern p=Pattern.compile(REGEX);
-		        	Matcher m=p.matcher(line);
-		        	if(m.find()) {
-		        		break;
-		        	}
-		        	date[c]=line;
-		        	c++;
-				}else {
-					break;
-				}
-			}
-			return date;
-		}catch(NullPointerException e) {
-			throw e;
-		}
-		
-	}
-	//count the number of lines from the part of header.
-	public int count(String header) {
-		//get the line number of header
-		int j=(int)headerMap.get(header);
-		int i=0;
-		//start loop to get lines from header.
-		for(i=j;i<1500000;i++) {
-			String line=(String)allMap.get(i+1);
-			//if the line is null, end it.
-			if(line!=null) {
-				//if a line is empty,turn to next loop
-				if(line.trim().isEmpty()) continue;
-				//if turn to next header,break the loop
-				Pattern p=Pattern.compile(REGEX);
-	        	Matcher m=p.matcher(line);
-	        	if(m.find()) {
-	        		i--;
-	        		break;
-	        	}
-			}else {
-				break;
-			}
-		}
-		return i-j;
-	}
+	
 	public static void main(String [] args) {
 		Polar polar=new Polar();
 	}
