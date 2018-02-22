@@ -80,7 +80,7 @@ public class Polar extends JFrame implements ActionListener {
 		textPanel.add(textarea);
 		//create table panel
 		JPanel tablePanel = new JPanel();
-		tablePanel.setPreferredSize(new Dimension(1200,200));
+		tablePanel.setPreferredSize(new Dimension(600,300));
 		//date table
 		String[] columns= {"Date","Start Time","Interval"};
 		data.model.setColumnIdentifiers(columns);
@@ -91,7 +91,7 @@ public class Polar extends JFrame implements ActionListener {
 		table.setPreferredScrollableViewportSize(table.getPreferredSize());
 		JScrollPane scrollPane=new JScrollPane(table);
 		scrollPane.setPreferredSize(new Dimension(200,50));
-		tablePanel.add(scrollPane);
+		tablePanel.add(scrollPane,BorderLayout.WEST);
 		//body data table
 		String[] columns1= {"Time","Speed(km/h)","Cadence(rpm)","Altitude","Heart rate","Power in watts"};
 		data.dataModel.setColumnIdentifiers(columns1);
@@ -101,7 +101,7 @@ public class Polar extends JFrame implements ActionListener {
 		table.setForeground(Color.blue);
 		dataTable.setPreferredScrollableViewportSize(dataTable.getPreferredSize());
 		JScrollPane scrollPane1=new JScrollPane(dataTable);
-		scrollPane1.setPreferredSize(new Dimension(1200,50));
+		scrollPane1.setPreferredSize(new Dimension(600,200));
 		tablePanel.add(scrollPane1);
 		
 		//Display frame in the center of window
