@@ -26,8 +26,7 @@ public class Polar extends JFrame implements ActionListener {
 	JButton button;
 	FileDialog fd;
 	File file;
-	TextArea textarea;
-
+	JComboBox<String> cb;
 	JTable table=new JTable();
 	JTable dataTable=new JTable();
     private static String REGEX = "\\[(.*?)\\]";
@@ -73,39 +72,49 @@ public class Polar extends JFrame implements ActionListener {
 		newMenuAbout.setFont(new Font("sans-serif", Font.PLAIN, 20));
 		fileHelp.add(newMenuAbout);
 		newMenuAbout.addActionListener(this);
-		//TextArea in Frame
-		JPanel textPanel=new JPanel();
-		textarea=new TextArea("",35,150,TextArea.SCROLLBARS_VERTICAL_ONLY);
-		textarea.setEditable(false);
-		textPanel.add(textarea);
 		//create table panel
 		JPanel tablePanel = new JPanel();
-		tablePanel.setPreferredSize(new Dimension(600,300));
+		tablePanel.setPreferredSize(new Dimension(600,800));
+		//
+		String []speedItem=new String[] {"MPH","KM/H"};
+		cb=new JComboBox<String>(speedItem);
+		cb.setSelectedIndex(1);
+		cb.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent event) {
+				@SuppressWarnings("unchecked")
+				JComboBox<String> cb=(JComboBox<String>)(event.getSource());
+				String s=(String)cb.getSelectedItem();
+				resetTable();
+				if(s.equals("KM/H")) {
+					data.tableData(true);
+				}else {
+					data.tableData(false);
+				}
+				dataTable.setModel(data.dataModel);
+			}
+		});
+		tablePanel.add(cb);
 		//date table
 		String[] columns= {"Date","Start Time","Interval"};
 		data.model.setColumnIdentifiers(columns);
-		table.setModel(data.model);
 		table.setRowHeight(30);
+		table.setModel(data.model);
 		table.setBackground(Color.YELLOW);
 		table.setForeground(Color.blue);
 		table.setPreferredScrollableViewportSize(table.getPreferredSize());
 		JScrollPane scrollPane=new JScrollPane(table);
-		scrollPane.setPreferredSize(new Dimension(200,50));
+		scrollPane.setPreferredSize(new Dimension(250,50));
 		tablePanel.add(scrollPane,BorderLayout.WEST);
 		//body data table
 		String[] columns1= {"Time","Speed(km/h)","Cadence(rpm)","Altitude","Heart rate","Power in watts"};
 		data.dataModel.setColumnIdentifiers(columns1);
-		dataTable.setModel(data.dataModel);
 		dataTable.setRowHeight(30);
-		table.setBackground(Color.YELLOW);
-		table.setForeground(Color.blue);
 		dataTable.setPreferredScrollableViewportSize(dataTable.getPreferredSize());
 		JScrollPane scrollPane1=new JScrollPane(dataTable);
 		scrollPane1.setPreferredSize(new Dimension(600,200));
 		tablePanel.add(scrollPane1);
 		
 		//Display frame in the center of window
-		contain.add(textPanel, BorderLayout.SOUTH);
 		contain.add(tablePanel,BorderLayout.WEST);
 		
 		frame.pack();
@@ -126,6 +135,7 @@ public class Polar extends JFrame implements ActionListener {
 
 		// When click "Load"
 		else if (source.getText().equals("Load")){
+			resetTable();
 			fd = new FileDialog(frame,"Open",FileDialog.LOAD);
             fd.setVisible(true);   //create and display FileDialog.
             try {   
@@ -137,7 +147,6 @@ public class Polar extends JFrame implements ActionListener {
 
                 String aline;
                 int i=1;
-                textarea.setText("");
                 //load file data to TextArea
                 while ((aline=br.readLine()) != null){
                 	//collect date to HashMap
@@ -149,13 +158,13 @@ public class Polar extends JFrame implements ActionListener {
                 		//record the line number of each line.
                 		data.headerMap.put(m.group(1),i);
                 	}
-                	textarea.append(aline+"   LLines:"+i+"\n");
                 	i++;
                 }
                 fr.close();
                 br.close();
                 data.tableData();
-                data.getIntTimes();
+                
+                dataTable.setModel(data.dataModel);
             	}
                 
               }
@@ -173,7 +182,9 @@ public class Polar extends JFrame implements ActionListener {
 			JOptionPane.showMessageDialog(newMenuAbout, "Welcome to Polar!"+"\n"+"                        :)");
 		}
 	}
-	
+	void resetTable() {
+		 data.dataModel.setRowCount(0);
+	}
 	public static void main(String [] args) {
 		Polar polar=new Polar();
 	}

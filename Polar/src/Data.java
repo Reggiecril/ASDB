@@ -18,7 +18,9 @@ public class Data {
 	public void tableData() {
 		//table date
         Object []row=new Object[3];
-        row[0]=getParams().get("Date");
+        String []date=getParams().get("Date").split("");
+        String date1=date[6]+date[7]+"/"+date[4]+date[5]+"/"+date[0]+date[1]+date[2]+date[3];
+        row[0]=date1;
         row[1]=getParams().get("StartTime");
         row[2]=getParams().get("Interval");
         model.addRow(row);
@@ -41,6 +43,51 @@ public class Data {
 	        dataModel.addRow(dataRow);
         }
         
+	}
+	/*
+	 * a method which add data to table
+	 */
+	public void tableData(boolean speed) {
+        if(speed) {
+	        //table body data
+	        String [][]spl=getIntTimes();
+	        for(int i=0;i<spl[0].length;i++) {
+	        	String []row1=spl[0][i].split("\t");
+	        	String []row2=spl[1][i].split("\t");
+	        	String []row3=spl[2][i].split("\t");
+	        	String []row4=spl[3][i].split("\t");
+	        	String []row5=spl[4][i].split("\t");
+		        Object []dataRow=new Object[6];
+		        float Speed=Integer.valueOf(row2[3]);
+		        dataRow[0]=row1[0];
+		        dataRow[1]=(Speed/128)*1.609;
+		        dataRow[2]=row2[4];
+		        dataRow[3]=row2[5];
+		        dataRow[4]=row1[1];
+		        dataRow[5]=row4[2];
+		        dataModel.addRow(dataRow);
+	        }
+        }else {
+        	//table body data
+	        String [][]spl=getIntTimes();
+	        for(int i=0;i<spl[0].length;i++) {
+	        	String []row1=spl[0][i].split("\t");
+	        	String []row2=spl[1][i].split("\t");
+	        	String []row3=spl[2][i].split("\t");
+	        	String []row4=spl[3][i].split("\t");
+	        	String []row5=spl[4][i].split("\t");
+		        Object []dataRow=new Object[6];
+		        float Speed=Integer.valueOf(row2[3]);
+		        dataRow[0]=row1[0];
+		        dataRow[1]=Speed/128;
+		        dataRow[2]=row2[4];
+		        dataRow[3]=row2[5];
+		        dataRow[4]=row1[1];
+		        dataRow[5]=row4[2];
+		        dataModel.addRow(dataRow);
+	        }
+        }
+
 	}
 	/**
 	 * get the data from 'IntTimes',then named every elements.
