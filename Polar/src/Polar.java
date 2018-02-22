@@ -74,17 +74,25 @@ public class Polar extends JFrame implements ActionListener {
 		newMenuAbout.addActionListener(this);
 		//create table panel
 		JPanel tablePanel = new JPanel();
-		tablePanel.setPreferredSize(new Dimension(600,800));
-		//
+		tablePanel.setPreferredSize(new Dimension(1200,400));
+		//Create a ComboBox to display two type data by MPH and KM/H
 		String []speedItem=new String[] {"MPH","KM/H"};
 		cb=new JComboBox<String>(speedItem);
 		cb.setSelectedIndex(1);
+		cb.setPreferredSize(new Dimension(150,50));
 		cb.addActionListener(new ActionListener() {
+			/*
+			 * when combobox select then display data by the text of selected.
+			 * (non-Javadoc)
+			 * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
+			 */
 			public void actionPerformed(ActionEvent event) {
 				@SuppressWarnings("unchecked")
 				JComboBox<String> cb=(JComboBox<String>)(event.getSource());
 				String s=(String)cb.getSelectedItem();
+				//empty the table
 				resetTable();
+				
 				if(s.equals("KM/H")) {
 					data.tableData(true);
 				}else {
@@ -106,12 +114,10 @@ public class Polar extends JFrame implements ActionListener {
 		scrollPane.setPreferredSize(new Dimension(250,50));
 		tablePanel.add(scrollPane,BorderLayout.WEST);
 		//body data table
-		String[] columns1= {"Time","Speed(km/h)","Cadence(rpm)","Altitude","Heart rate","Power in watts"};
-		data.dataModel.setColumnIdentifiers(columns1);
 		dataTable.setRowHeight(30);
 		dataTable.setPreferredScrollableViewportSize(dataTable.getPreferredSize());
 		JScrollPane scrollPane1=new JScrollPane(dataTable);
-		scrollPane1.setPreferredSize(new Dimension(600,200));
+		scrollPane1.setPreferredSize(new Dimension(1200,200));
 		tablePanel.add(scrollPane1);
 		
 		//Display frame in the center of window
@@ -136,6 +142,7 @@ public class Polar extends JFrame implements ActionListener {
 		// When click "Load"
 		else if (source.getText().equals("Load")){
 			resetTable();
+			data.model.setRowCount(0);
 			fd = new FileDialog(frame,"Open",FileDialog.LOAD);
             fd.setVisible(true);   //create and display FileDialog.
             try {   

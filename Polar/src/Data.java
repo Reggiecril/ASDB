@@ -26,30 +26,38 @@ public class Data {
         model.addRow(row);
         //table body data
         String [][]spl=getIntTimes();
+		String[] columns1= {"Time","Speed(km/h)","Cadence(rpm)","Altitude","Heart rate","Heart Rate(MAX)","Power in watts"};
+		dataModel.setColumnIdentifiers(columns1);
         for(int i=0;i<spl[0].length;i++) {
         	String []row1=spl[0][i].split("\t");
         	String []row2=spl[1][i].split("\t");
         	String []row3=spl[2][i].split("\t");
         	String []row4=spl[3][i].split("\t");
         	String []row5=spl[4][i].split("\t");
-	        Object []dataRow=new Object[6];
+	        Object []dataRow=new Object[7];
 	        float Speed=Integer.valueOf(row2[3]);
 	        dataRow[0]=row1[0];
 	        dataRow[1]=(Speed/128)*1.609;
 	        dataRow[2]=row2[4];
 	        dataRow[3]=row2[5];
 	        dataRow[4]=row1[1];
-	        dataRow[5]=row4[2];
+	        dataRow[5]=row1[4];
+	        dataRow[6]=row4[2];
 	        dataModel.addRow(dataRow);
         }
         
 	}
 	/*
-	 * a method which add data to table
+	 * re-write tableDate();
+	 * this is only for table of body data.
+	 * display data by different speed.
 	 */
 	public void tableData(boolean speed) {
+		
         if(speed) {
 	        //table body data
+    		String[] columns1= {"Time","Speed(KM/H)","Cadence(RPM)","Altitude","Heart Rate","Heart Rate(MAX)","Power In Watts"};
+    		dataModel.setColumnIdentifiers(columns1);
 	        String [][]spl=getIntTimes();
 	        for(int i=0;i<spl[0].length;i++) {
 	        	String []row1=spl[0][i].split("\t");
@@ -57,18 +65,21 @@ public class Data {
 	        	String []row3=spl[2][i].split("\t");
 	        	String []row4=spl[3][i].split("\t");
 	        	String []row5=spl[4][i].split("\t");
-		        Object []dataRow=new Object[6];
+		        Object []dataRow=new Object[7];
 		        float Speed=Integer.valueOf(row2[3]);
 		        dataRow[0]=row1[0];
 		        dataRow[1]=(Speed/128)*1.609;
 		        dataRow[2]=row2[4];
 		        dataRow[3]=row2[5];
 		        dataRow[4]=row1[1];
-		        dataRow[5]=row4[2];
+		        dataRow[5]=row1[4];
+		        dataRow[6]=row4[2];
 		        dataModel.addRow(dataRow);
 	        }
         }else {
         	//table body data
+    		String[] columns1= {"Time","Speed(mph)","Cadence(rpm)","Altitude","Heart rate","Power in watts"};
+    		dataModel.setColumnIdentifiers(columns1);
 	        String [][]spl=getIntTimes();
 	        for(int i=0;i<spl[0].length;i++) {
 	        	String []row1=spl[0][i].split("\t");
@@ -76,14 +87,15 @@ public class Data {
 	        	String []row3=spl[2][i].split("\t");
 	        	String []row4=spl[3][i].split("\t");
 	        	String []row5=spl[4][i].split("\t");
-		        Object []dataRow=new Object[6];
+		        Object []dataRow=new Object[7];
 		        float Speed=Integer.valueOf(row2[3]);
 		        dataRow[0]=row1[0];
 		        dataRow[1]=Speed/128;
 		        dataRow[2]=row2[4];
 		        dataRow[3]=row2[5];
 		        dataRow[4]=row1[1];
-		        dataRow[5]=row4[2];
+		        dataRow[5]=row1[4];
+		        dataRow[6]=row4[2];
 		        dataModel.addRow(dataRow);
 	        }
         }
