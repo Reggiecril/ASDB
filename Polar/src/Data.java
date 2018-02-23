@@ -6,6 +6,7 @@ import javax.swing.table.DefaultTableModel;
 public class Data {
 	DefaultTableModel model =new DefaultTableModel();
 	DefaultTableModel dataModel =new DefaultTableModel();
+	DefaultTableModel summaryModel =new DefaultTableModel();
     HashMap<Integer,String> allMap = new HashMap<Integer,String>();
     HashMap<String,Integer> headerMap=new HashMap<String,Integer>();
     private static String REGEX = "\\[(.*?)\\]";
@@ -16,7 +17,7 @@ public class Data {
 	 * a method which add data to table
 	 */
 	public void tableData() {
-		//table date
+		//header table date
         Object []row=new Object[3];
         String []date=getParams().get("Date").split("");
         String date1=date[6]+date[7]+"/"+date[4]+date[5]+"/"+date[0]+date[1]+date[2]+date[3];
@@ -45,7 +46,7 @@ public class Data {
 	        dataRow[6]=row4[2];
 	        dataModel.addRow(dataRow);
         }
-        
+        summaryDate(true);
 	}
 	/*
 	 * re-write tableDate();
@@ -100,6 +101,82 @@ public class Data {
 	        }
         }
 
+	}
+	public void summaryDate(boolean speed) {
+        //summary body data
+        String [][]spl=getIntTimes();
+        if(speed) {
+        	String[] columns1= {"Total distance covered","Average speed(KM/H)","Maximum speed(KM/H)","Average heart rate","Maximum heart rate","Minimum heart rate","Average power","Maximum power","Average altitude","Maximum altitude"};
+        	summaryModel.setColumnIdentifiers(columns1);
+        }else {
+        	String[] columns1= {"Total distance covered","Average speed(MPH)","Maximum speed(MPH)","Average heart rate","Maximum heart rate","Minimum heart rate","Average power","Maximum power","Average altitude","Maximum altitude"};
+        	summaryModel.setColumnIdentifiers(columns1);
+        }
+        Object []dataRow=new Object[10];
+        int sumHeart=0;
+        int sumPower=0;
+        int length=spl[0].length;
+        int maxHeart=0;
+        int minHeart=200;
+        int maxPower=0;
+        String [][]row1=new String[length][5];
+        String [][]row2=new String[length][6];
+        String [][]row3=new String[length][3];
+        String [][]row4=new String[length][6];
+        String [][]row5=new String[length][2];
+        for(int i=0;i<length;i++) {
+        	row1[i]=spl[0][i].split("\t");
+        	row2[i]=spl[1][i].split("\t");
+        	row3[i]=spl[2][i].split("\t");
+        	row4[i]=spl[3][i].split("\t");
+        	row5[i]=spl[4][i].split("\t");
+        	sumHeart+=Integer.valueOf(row1[i][3]);
+        	sumPower+=Integer.valueOf(row4[i][2]);
+        	if(maxHeart<Integer.valueOf(row1[i][4])) {
+        		maxHeart=Integer.valueOf(row1[i][4]);
+        	}
+        	if(minHeart>Integer.valueOf(row1[i][2])) {
+        		minHeart=Integer.valueOf(row1[i][2]);
+        	}
+        	if(maxPower<Integer.valueOf(row4[i][2])) {
+        		maxPower=Integer.valueOf(row4[i][2]);
+        	}
+        }
+    	
+        //Total distance
+        dataRow[0]=getTrip().get("Distance");
+        //Initialize Average speed
+        double averageSpeed=Integer.valueOf(getTrip().get("AverageSpeed"));
+        //Initialize Maximum speed
+        double maximumSpeed=Integer.valueOf(getTrip().get("MaximumSpeed"));
+        if(speed) {
+            //Average speed
+            dataRow[1]=(averageSpeed/128)*1.609;
+            //Maximum speed
+            dataRow[2]=(maximumSpeed/128)*1.609;
+        }else {
+            //Average speed
+            dataRow[1]=averageSpeed/128;
+            //Maximum speed
+            dataRow[2]=maximumSpeed/128;
+        }
+        //Average heart rate
+        dataRow[3]=sumHeart/length;
+        //Maximum heart rate
+        dataRow[4]=maxHeart;
+        //Minimum heart rate
+        dataRow[5]=minHeart;
+        //Average power
+        dataRow[6]=sumPower/length;
+        //Maximum power
+        dataRow[7]=maxPower;
+        //Average altitude
+        dataRow[8]=getTrip().get("AverageAltitude");
+        //Maximum altitude
+        dataRow[9]=getTrip().get("MaximumAltitude");
+
+        summaryModel.addRow(dataRow);
+        
 	}
 	/**
 	 * get the data from 'IntTimes',then named every elements.

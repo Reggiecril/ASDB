@@ -12,6 +12,8 @@ import java.awt.Dimension;
 import java.awt.FileDialog;
 import java.awt.FlowLayout;
 import java.awt.Font;
+import java.awt.Point;
+import java.awt.Rectangle;
 import java.awt.TextArea;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -27,8 +29,10 @@ public class Polar extends JFrame implements ActionListener {
 	FileDialog fd;
 	File file;
 	JComboBox<String> cb;
+	JLabel body;
 	JTable table=new JTable();
 	JTable dataTable=new JTable();
+	JTable summaryTable=new JTable();
     private static String REGEX = "\\[(.*?)\\]";
 	Data data=new Data();
 	Polar(){
@@ -72,9 +76,20 @@ public class Polar extends JFrame implements ActionListener {
 		newMenuAbout.setFont(new Font("sans-serif", Font.PLAIN, 20));
 		fileHelp.add(newMenuAbout);
 		newMenuAbout.addActionListener(this);
+		
+		
+		///this is a panel in the north
 		//create table panel
 		JPanel tablePanel = new JPanel();
 		tablePanel.setPreferredSize(new Dimension(1200,400));
+		
+		//this is a panel which have some components and a table shows header of data.
+		//create a header JPanel in tablePanel
+		JPanel headerPanel = new JPanel();
+		headerPanel.setPreferredSize(new Dimension(1200,60));
+		headerPanel.setBackground(Color.getHSBColor(0.0f, 0.0f, 93.33f));
+		tablePanel.add(headerPanel);
+		
 		//Create a ComboBox to display two type data by MPH and KM/H
 		String []speedItem=new String[] {"MPH","KM/H"};
 		cb=new JComboBox<String>(speedItem);
@@ -91,37 +106,80 @@ public class Polar extends JFrame implements ActionListener {
 				JComboBox<String> cb=(JComboBox<String>)(event.getSource());
 				String s=(String)cb.getSelectedItem();
 				//empty the table
-				resetTable();
-				
+				resetBodyTable();
+				resetSummaryTable();
 				if(s.equals("KM/H")) {
 					data.tableData(true);
+					data.summaryDate(true);
 				}else {
 					data.tableData(false);
+					data.summaryDate(false);
 				}
+				summaryTable.setModel(data.summaryModel);
 				dataTable.setModel(data.dataModel);
 			}
 		});
-		tablePanel.add(cb);
+		headerPanel.add(cb);
+		//create summary Panel in the table panel
+		//create summary Panel
+		JPanel summaryPane=new JPanel();
+		summaryPane.setPreferredSize(new Dimension(1200,400));
+		tablePanel.add(summaryPane);
+		//create a JLabel in summaryPanel
+		JLabel summary=new JLabel("Summary",SwingConstants.CENTER);
+		summary.setFont (summary.getFont ().deriveFont (28.0f));
+		summary.setMaximumSize(new Dimension(1200,50));
+		summary.setPreferredSize(new Dimension(1200,50));
+		summary.setMinimumSize(new Dimension(1200,50));
+		summaryPane.add(summary,BorderLayout.NORTH);
+		//create summary table
+		summaryTable.setRowHeight(30);
+		summaryTable.setModel(data.summaryModel);
+		summaryTable.setBackground(Color.YELLOW);
+		summaryTable.setPreferredScrollableViewportSize(summaryTable.getPreferredSize());
+		JScrollPane scrollPane3=new JScrollPane(summaryTable);
+		scrollPane3.setPreferredSize(new Dimension(1200,260));
+		summaryPane.add(scrollPane3,BorderLayout.SOUTH);
 		//date table
 		String[] columns= {"Date","Start Time","Interval"};
 		data.model.setColumnIdentifiers(columns);
 		table.setRowHeight(30);
 		table.setModel(data.model);
 		table.setBackground(Color.YELLOW);
-		table.setForeground(Color.blue);
 		table.setPreferredScrollableViewportSize(table.getPreferredSize());
 		JScrollPane scrollPane=new JScrollPane(table);
 		scrollPane.setPreferredSize(new Dimension(250,50));
-		tablePanel.add(scrollPane,BorderLayout.WEST);
-		//body data table
+		headerPanel.add(scrollPane,BorderLayout.WEST);
+		
+		
+		
+		///this is a panel in south
+		//create bodyPanel
+		JPanel bodyPanel=new JPanel();
+		bodyPanel.setBackground(Color.getHSBColor(0.0f, 0.0f, 93.33f));
+		//create a label in bodyPanel
+		body=new JLabel("Body Data");
+		body.setFont (body.getFont ().deriveFont (28.0f));
+		bodyPanel.add(body, BorderLayout.WEST);
+		bodyPanel.setPreferredSize(new Dimension(1200,350));
+		
+		//labelPane in body Panel
+		JPanel labelPane=new JPanel();
+		labelPane.add(body);
+		labelPane.setPreferredSize(new Dimension(1200,50));
+		bodyPanel.add(labelPane);
+		
+		//create dataTable in body Panel
 		dataTable.setRowHeight(30);
 		dataTable.setPreferredScrollableViewportSize(dataTable.getPreferredSize());
+		dataTable.setBackground(Color.GRAY);
 		JScrollPane scrollPane1=new JScrollPane(dataTable);
-		scrollPane1.setPreferredSize(new Dimension(1200,200));
-		tablePanel.add(scrollPane1);
+		scrollPane1.setPreferredSize(new Dimension(1200,280));
+		bodyPanel.add(scrollPane1);
 		
 		//Display frame in the center of window
-		contain.add(tablePanel,BorderLayout.WEST);
+		contain.add(tablePanel,BorderLayout.NORTH);
+		contain.add(bodyPanel,BorderLayout.SOUTH);
 		
 		frame.pack();
 		frame.setLocationRelativeTo(null);
@@ -141,7 +199,8 @@ public class Polar extends JFrame implements ActionListener {
 
 		// When click "Load"
 		else if (source.getText().equals("Load")){
-			resetTable();
+			resetBodyTable();
+			resetSummaryTable();
 			data.model.setRowCount(0);
 			fd = new FileDialog(frame,"Open",FileDialog.LOAD);
             fd.setVisible(true);   //create and display FileDialog.
@@ -170,8 +229,8 @@ public class Polar extends JFrame implements ActionListener {
                 fr.close();
                 br.close();
                 data.tableData();
-                
                 dataTable.setModel(data.dataModel);
+                summaryTable.setModel(data.summaryModel);
             	}
                 
               }
@@ -189,8 +248,11 @@ public class Polar extends JFrame implements ActionListener {
 			JOptionPane.showMessageDialog(newMenuAbout, "Welcome to Polar!"+"\n"+"                        :)");
 		}
 	}
-	void resetTable() {
+	void resetBodyTable() {
 		 data.dataModel.setRowCount(0);
+	}
+	void resetSummaryTable() {
+		 data.summaryModel.setRowCount(0);
 	}
 	public static void main(String [] args) {
 		Polar polar=new Polar();
