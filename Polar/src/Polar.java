@@ -17,6 +17,7 @@ import java.awt.Rectangle;
 import java.awt.TextArea;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
 import java.util.HashMap;
 import java.util.regex.*;
 
@@ -81,7 +82,7 @@ public class Polar extends JFrame implements ActionListener {
 		///this is a panel in the north
 		//create table panel
 		JPanel tablePanel = new JPanel();
-		tablePanel.setPreferredSize(new Dimension(1200,400));
+		tablePanel.setPreferredSize(new Dimension(1200,200));
 		
 		//this is a panel which have some components and a table shows header of data.
 		//create a header JPanel in tablePanel
@@ -123,7 +124,7 @@ public class Polar extends JFrame implements ActionListener {
 		//create summary Panel in the table panel
 		//create summary Panel
 		JPanel summaryPane=new JPanel();
-		summaryPane.setPreferredSize(new Dimension(1200,400));
+		summaryPane.setPreferredSize(new Dimension(1200,150));
 		tablePanel.add(summaryPane);
 		//create a JLabel in summaryPanel
 		JLabel summary=new JLabel("Summary",SwingConstants.CENTER);
@@ -138,7 +139,7 @@ public class Polar extends JFrame implements ActionListener {
 		summaryTable.setBackground(Color.YELLOW);
 		summaryTable.setPreferredScrollableViewportSize(summaryTable.getPreferredSize());
 		JScrollPane scrollPane3=new JScrollPane(summaryTable);
-		scrollPane3.setPreferredSize(new Dimension(1200,260));
+		scrollPane3.setPreferredSize(new Dimension(1200,80));
 		summaryPane.add(scrollPane3,BorderLayout.SOUTH);
 		//date table
 		String[] columns= {"Date","Start Time","Interval"};
@@ -151,8 +152,6 @@ public class Polar extends JFrame implements ActionListener {
 		scrollPane.setPreferredSize(new Dimension(250,50));
 		headerPanel.add(scrollPane,BorderLayout.WEST);
 		
-		
-		
 		///this is a panel in south
 		//create bodyPanel
 		JPanel bodyPanel=new JPanel();
@@ -161,7 +160,7 @@ public class Polar extends JFrame implements ActionListener {
 		body=new JLabel("Body Data");
 		body.setFont (body.getFont ().deriveFont (28.0f));
 		bodyPanel.add(body, BorderLayout.WEST);
-		bodyPanel.setPreferredSize(new Dimension(1200,350));
+		bodyPanel.setPreferredSize(new Dimension(1200,550));
 		
 		//labelPane in body Panel
 		JPanel labelPane=new JPanel();
@@ -174,8 +173,17 @@ public class Polar extends JFrame implements ActionListener {
 		dataTable.setPreferredScrollableViewportSize(dataTable.getPreferredSize());
 		dataTable.setBackground(Color.GRAY);
 		JScrollPane scrollPane1=new JScrollPane(dataTable);
-		scrollPane1.setPreferredSize(new Dimension(1200,280));
-		bodyPanel.add(scrollPane1);
+		scrollPane1.setPreferredSize(new Dimension(1200,480));
+		//create chart panel
+		JPanel chartPanel=new JPanel();
+		chartPanel.setPreferredSize(new Dimension(1200,480));
+		//create a tab Panel to display data and chart
+		JTabbedPane tabbedPane = new JTabbedPane();
+		tabbedPane.addTab("Data", scrollPane1);
+		tabbedPane.setMnemonicAt(0, KeyEvent.VK_1);
+		tabbedPane.addTab("Chart", chartPanel);
+		tabbedPane.setMnemonicAt(1, KeyEvent.VK_2);
+		bodyPanel.add(tabbedPane);
 		
 		//Display frame in the center of window
 		contain.add(tablePanel,BorderLayout.NORTH);
