@@ -1,8 +1,8 @@
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
-
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.awt.BorderLayout;
@@ -14,12 +14,26 @@ import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.awt.RenderingHints;
 import java.awt.TextArea;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.util.HashMap;
 import java.util.regex.*;
+
+import org.jfree.chart.ChartFactory;  
+import org.jfree.chart.ChartFrame;
+import org.jfree.chart.ChartPanel;
+import org.jfree.chart.ChartUtilities;  
+import org.jfree.chart.JFreeChart;  
+import org.jfree.chart.axis.CategoryAxis;  
+import org.jfree.chart.axis.ValueAxis;  
+import org.jfree.chart.plot.CategoryPlot;  
+import org.jfree.chart.plot.PlotOrientation;  
+import org.jfree.chart.title.TextTitle;  
+import org.jfree.data.category.CategoryDataset;  
+import org.jfree.data.category.DefaultCategoryDataset;  
 
 public class Polar extends JFrame implements ActionListener {
 	JFrame frame;
@@ -37,7 +51,6 @@ public class Polar extends JFrame implements ActionListener {
     private static String REGEX = "\\[(.*?)\\]";
 	Data data=new Data();
 	Polar(){
-		GUI();
 	}
 	public void GUI() {
 		frame=new JFrame();
@@ -175,7 +188,15 @@ public class Polar extends JFrame implements ActionListener {
 		JScrollPane scrollPane1=new JScrollPane(dataTable);
 		scrollPane1.setPreferredSize(new Dimension(1200,480));
 		//create chart panel
-		JPanel chartPanel=new JPanel();
+        CategoryDataset dataset = createDataset();  
+        // Create chart
+        JFreeChart chart = ChartFactory.createLineChart(
+            "Site Traffic (WWW.BORAJI.COM)", // Chart title
+            "Date", // X-Axis Label
+            "Number of Visitor", // Y-Axis Label
+            dataset
+            );
+		ChartPanel chartPanel=new ChartPanel(chart);
 		chartPanel.setPreferredSize(new Dimension(1200,480));
 		//create a tab Panel to display data and chart
 		JTabbedPane tabbedPane = new JTabbedPane();
@@ -184,7 +205,7 @@ public class Polar extends JFrame implements ActionListener {
 		tabbedPane.addTab("Chart", chartPanel);
 		tabbedPane.setMnemonicAt(1, KeyEvent.VK_2);
 		bodyPanel.add(tabbedPane);
-		
+        
 		//Display frame in the center of window
 		contain.add(tablePanel,BorderLayout.NORTH);
 		contain.add(bodyPanel,BorderLayout.SOUTH);
@@ -196,6 +217,31 @@ public class Polar extends JFrame implements ActionListener {
 		frame.setVisible(true);	
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 	}
+	  private DefaultCategoryDataset createDataset() {
+
+		    String series1 = "Vistor";
+		    String series2 = "Unique Visitor";
+
+		    DefaultCategoryDataset dataset = new DefaultCategoryDataset();
+
+		    dataset.addValue(200, series1, "2016-12-19");
+		    dataset.addValue(150, series1, "2016-12-20");
+		    dataset.addValue(100, series1, "2016-12-21");
+		    dataset.addValue(210, series1, "2016-12-22");
+		    dataset.addValue(240, series1, "2016-12-23");
+		    dataset.addValue(195, series1, "2016-12-24");
+		    dataset.addValue(245, series1, "2016-12-25");
+
+		    dataset.addValue(150, series2, "2016-12-19");
+		    dataset.addValue(130, series2, "2016-12-20");
+		    dataset.addValue(95, series2, "2016-12-21");
+		    dataset.addValue(195, series2, "2016-12-22");
+		    dataset.addValue(200, series2, "2016-12-23");
+		    dataset.addValue(180, series2, "2016-12-24");
+		    dataset.addValue(230, series2, "2016-12-25");
+
+		    return dataset;
+		  }
 	public void actionPerformed (ActionEvent e){
 		JMenuItem source = (JMenuItem) (e.getSource());
 		// When click "Save"
@@ -264,5 +310,7 @@ public class Polar extends JFrame implements ActionListener {
 	}
 	public static void main(String [] args) {
 		Polar polar=new Polar();
+		polar.GUI();
 	}
 }
+
