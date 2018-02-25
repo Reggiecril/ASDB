@@ -19,6 +19,8 @@ public class Data {
 	public void tableData() {
 		//header table date
         Object []row=new Object[3];
+		String[] columns= {"Date","Start Time","Interval"};
+		model.setColumnIdentifiers(columns);
         String []date=getParams().get("Date").split("");
         String date1=date[6]+date[7]+"/"+date[4]+date[5]+"/"+date[0]+date[1]+date[2]+date[3];
         row[0]=date1;
@@ -132,12 +134,15 @@ public class Data {
         	row5[i]=spl[4][i].split("\t");
         	sumHeart+=Integer.valueOf(row1[i][3]);
         	sumPower+=Integer.valueOf(row4[i][2]);
+        	//loop to select a max heart rate
         	if(maxHeart<Integer.valueOf(row1[i][4])) {
         		maxHeart=Integer.valueOf(row1[i][4]);
         	}
+        	//loop to select a min heart rate
         	if(minHeart>Integer.valueOf(row1[i][2])) {
         		minHeart=Integer.valueOf(row1[i][2]);
-        	}
+        	}        	
+        	//loop to select a max power
         	if(maxPower<Integer.valueOf(row4[i][2])) {
         		maxPower=Integer.valueOf(row4[i][2]);
         	}

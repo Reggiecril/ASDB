@@ -148,17 +148,13 @@ public class Polar extends JFrame implements ActionListener {
 		summaryPane.add(summary,BorderLayout.NORTH);
 		//create summary table
 		summaryTable.setRowHeight(30);
-		summaryTable.setModel(data.summaryModel);
 		summaryTable.setBackground(Color.YELLOW);
 		summaryTable.setPreferredScrollableViewportSize(summaryTable.getPreferredSize());
 		JScrollPane scrollPane3=new JScrollPane(summaryTable);
 		scrollPane3.setPreferredSize(new Dimension(1200,80));
 		summaryPane.add(scrollPane3,BorderLayout.SOUTH);
 		//date table
-		String[] columns= {"Date","Start Time","Interval"};
-		data.model.setColumnIdentifiers(columns);
 		table.setRowHeight(30);
-		table.setModel(data.model);
 		table.setBackground(Color.YELLOW);
 		table.setPreferredScrollableViewportSize(table.getPreferredSize());
 		JScrollPane scrollPane=new JScrollPane(table);
@@ -211,11 +207,11 @@ public class Polar extends JFrame implements ActionListener {
 		contain.add(bodyPanel,BorderLayout.SOUTH);
 		
 		frame.pack();
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setLocationRelativeTo(null);
 		frame.setJMenuBar(menuBar);
 		frame.setSize(1200,800);
 		frame.setVisible(true);	
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 	}
 	  private DefaultCategoryDataset createDataset() {
 
@@ -285,6 +281,7 @@ public class Polar extends JFrame implements ActionListener {
                 data.tableData();
                 dataTable.setModel(data.dataModel);
                 summaryTable.setModel(data.summaryModel);
+                table.setModel(data.model);
             	}
                 
               }
@@ -307,6 +304,9 @@ public class Polar extends JFrame implements ActionListener {
 	}
 	void resetSummaryTable() {
 		 data.summaryModel.setRowCount(0);
+	}
+	void resetTable() {
+		 data.model.setRowCount(0);
 	}
 	public static void main(String [] args) {
 		Polar polar=new Polar();
