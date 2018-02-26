@@ -51,7 +51,7 @@ public class Polar extends JFrame implements ActionListener {
     private static String REGEX = "\\[(.*?)\\]";
 	Data data=new Data();
 	private boolean speed;
-
+	JTabbedPane tabbedPane = new JTabbedPane();
 	ChartPanel chartPanel;
 	Polar(){
 	}
@@ -129,15 +129,18 @@ public class Polar extends JFrame implements ActionListener {
 				
 				if(s.equals("KM/H")) {
 					polar.setSpeed(true);
-					data.tableData(polar.isSpeed());
-					data.summaryDate(polar.isSpeed());
 				}else {
 					polar.setSpeed(false);
-					data.tableData(polar.isSpeed());
-					data.summaryDate(polar.isSpeed());
 				}
+				data.tableData(polar.isSpeed());
+				data.summaryDate(polar.isSpeed());
 				summaryTable.setModel(data.summaryModel);
 				dataTable.setModel(data.dataModel);
+				tabbedPane.remove(1);
+				ChartPanel chartPanel=new ChartPanel(data.chart(isSpeed()));
+				setChartPanel(chartPanel);
+				tabbedPane.addTab("Chart", getChartPanel());
+				tabbedPane.setMnemonicAt(1, KeyEvent.VK_2);
 			}
 		});
 		headerPanel.add(cb);
@@ -181,13 +184,11 @@ public class Polar extends JFrame implements ActionListener {
 		scrollPane1.setPreferredSize(new Dimension(1200,480));
 
 		//create a tab Panel to display data and chart
-		JTabbedPane tabbedPane = new JTabbedPane();
 		tabbedPane.setPreferredSize(new Dimension(1200,490));
 		tabbedPane.addTab("Data", scrollPane1);
 		tabbedPane.setMnemonicAt(0, KeyEvent.VK_1);
 	
-		tabbedPane.addTab("Chart", chartPanel);
-		tabbedPane.setMnemonicAt(1, KeyEvent.VK_2);
+
 		bodyPanel.add(tabbedPane);
         
 		//Display frame in the center of window
@@ -246,7 +247,11 @@ public class Polar extends JFrame implements ActionListener {
                 dataTable.setModel(data.dataModel);
                 summaryTable.setModel(data.summaryModel);
                 table.setModel(data.model);
-                chartPanel=new ChartPanel(data.chart(isSpeed()));
+                tabbedPane.remove(1);
+				ChartPanel chartPanel=new ChartPanel(data.chart(isSpeed()));
+				setChartPanel(chartPanel);
+				tabbedPane.addTab("Chart", getChartPanel());
+				tabbedPane.setMnemonicAt(1, KeyEvent.VK_2);
             	}
                 
               }
@@ -263,6 +268,12 @@ public class Polar extends JFrame implements ActionListener {
 			//show a messagebox.
 			JOptionPane.showMessageDialog(newMenuAbout, "Welcome to Polar!"+"\n"+"                        :)");
 		}
+	}
+	public ChartPanel getChartPanel() {
+		return chartPanel;
+	}
+	public void setChartPanel(ChartPanel chartPanel) {
+		this.chartPanel = chartPanel;
 	}
 	void resetBodyTable() {
 		 data.dataModel.setRowCount(0);
