@@ -3,6 +3,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.swing.table.DefaultTableModel;
 
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.ChartPanel;
+import org.jfree.chart.JFreeChart;
+import org.jfree.data.category.CategoryDataset;
+import org.jfree.data.category.DefaultCategoryDataset;
+
 public class Data {
 	DefaultTableModel model =new DefaultTableModel();
 	DefaultTableModel dataModel =new DefaultTableModel();
@@ -49,6 +55,66 @@ public class Data {
 	        dataModel.addRow(dataRow);
         }
         summaryDate(true);
+		//create chart panel
+       
+		
+	}
+	private DefaultCategoryDataset createDataset(boolean speed) {
+		//get data from header[IntTimes]
+        String [][]spl=getIntTimes();
+        
+        //Initialize
+        DefaultCategoryDataset dataset = new DefaultCategoryDataset();
+        int length=spl[0].length;
+        String [][]row1=new String[length][5];
+        String [][]row2=new String[length][6];
+        String [][]row3=new String[length][3];
+        String [][]row4=new String[length][6];
+        String [][]row5=new String[length][2];
+        //Divide into 5 parts
+        for(int i=0;i<length;i++) {
+        	row1[i]=spl[0][i].split("\t");
+        	row2[i]=spl[1][i].split("\t");
+        	row3[i]=spl[2][i].split("\t");
+        	row4[i]=spl[3][i].split("\t");
+        	row5[i]=spl[4][i].split("\t");
+        String series1;
+        if(speed) {
+        	series1 = "Speed(KM/H)";
+        }else {
+        	series1="Speed(MPH)";
+        }
+	   
+	    String series2 = "Cadence(rpm)";
+	    String series3 = "Altitude";
+	    String series4 = "Heart Rate(bpm)";
+	    String series5 = "Power(W)";
+
+	    if(speed) {
+	    	dataset.addValue((Integer.valueOf(row2[i][3])/128)*1.609, series1, row1[i][0]);
+	    }else {
+	    	dataset.addValue(Integer.valueOf(row2[i][3])/128, series1, row1[i][0]);
+	    }
+	    dataset.addValue(Integer.valueOf(row2[i][4]), series2, row1[i][0]);
+	    
+	    dataset.addValue(Integer.valueOf(row2[i][5]), series3, row1[i][0]);
+	    
+	    dataset.addValue(Integer.valueOf(row1[i][1]), series4, row1[i][0]);
+	    
+	    dataset.addValue(Integer.valueOf(row4[i][2]), series5, row1[i][0]);
+        }
+	    return dataset;
+	  }
+	public JFreeChart chart(boolean speed) {
+        CategoryDataset dataset = createDataset(speed);  
+        // Create chart
+        JFreeChart chart = ChartFactory.createLineChart(
+            "Polar", // Chart title
+            "Time", // X-Axis Label
+            "Number", // Y-Axis Label
+            dataset
+            );
+        return chart;
 	}
 	/*
 	 * re-write tableDate();
@@ -114,6 +180,7 @@ public class Data {
         	String[] columns1= {"Total distance covered","Average speed(MPH)","Maximum speed(MPH)","Average heart rate","Maximum heart rate","Minimum heart rate","Average power","Maximum power","Average altitude","Maximum altitude"};
         	summaryModel.setColumnIdentifiers(columns1);
         }
+        //Initialize
         Object []dataRow=new Object[10];
         int sumHeart=0;
         int sumPower=0;
@@ -126,6 +193,7 @@ public class Data {
         String [][]row3=new String[length][3];
         String [][]row4=new String[length][6];
         String [][]row5=new String[length][2];
+        //loop to calculate 
         for(int i=0;i<length;i++) {
         	row1[i]=spl[0][i].split("\t");
         	row2[i]=spl[1][i].split("\t");

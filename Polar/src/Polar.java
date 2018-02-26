@@ -50,6 +50,9 @@ public class Polar extends JFrame implements ActionListener {
 	JTable summaryTable=new JTable();
     private static String REGEX = "\\[(.*?)\\]";
 	Data data=new Data();
+	private boolean speed;
+
+	ChartPanel chartPanel;
 	Polar(){
 	}
 	public void GUI() {
@@ -122,12 +125,16 @@ public class Polar extends JFrame implements ActionListener {
 				//empty the table
 				resetBodyTable();
 				resetSummaryTable();
+				Polar polar=new Polar();
+				
 				if(s.equals("KM/H")) {
-					data.tableData(true);
-					data.summaryDate(true);
+					polar.setSpeed(true);
+					data.tableData(polar.isSpeed());
+					data.summaryDate(polar.isSpeed());
 				}else {
-					data.tableData(false);
-					data.summaryDate(false);
+					polar.setSpeed(false);
+					data.tableData(polar.isSpeed());
+					data.summaryDate(polar.isSpeed());
 				}
 				summaryTable.setModel(data.summaryModel);
 				dataTable.setModel(data.dataModel);
@@ -165,17 +172,6 @@ public class Polar extends JFrame implements ActionListener {
 		//create bodyPanel
 		JPanel bodyPanel=new JPanel();
 		bodyPanel.setBackground(Color.getHSBColor(0.0f, 0.0f, 93.33f));
-		//create a label in bodyPanel
-		body=new JLabel("Body Data");
-		body.setFont (body.getFont ().deriveFont (28.0f));
-		bodyPanel.add(body, BorderLayout.WEST);
-		bodyPanel.setPreferredSize(new Dimension(1200,550));
-		
-		//labelPane in body Panel
-		JPanel labelPane=new JPanel();
-		labelPane.add(body);
-		labelPane.setPreferredSize(new Dimension(1200,50));
-		bodyPanel.add(labelPane);
 		
 		//create dataTable in body Panel
 		dataTable.setRowHeight(30);
@@ -183,21 +179,13 @@ public class Polar extends JFrame implements ActionListener {
 		dataTable.setBackground(Color.GRAY);
 		JScrollPane scrollPane1=new JScrollPane(dataTable);
 		scrollPane1.setPreferredSize(new Dimension(1200,480));
-		//create chart panel
-        CategoryDataset dataset = createDataset();  
-        // Create chart
-        JFreeChart chart = ChartFactory.createLineChart(
-            "Site Traffic (WWW.BORAJI.COM)", // Chart title
-            "Date", // X-Axis Label
-            "Number of Visitor", // Y-Axis Label
-            dataset
-            );
-		ChartPanel chartPanel=new ChartPanel(chart);
-		chartPanel.setPreferredSize(new Dimension(1200,480));
+
 		//create a tab Panel to display data and chart
 		JTabbedPane tabbedPane = new JTabbedPane();
+		tabbedPane.setPreferredSize(new Dimension(1200,490));
 		tabbedPane.addTab("Data", scrollPane1);
 		tabbedPane.setMnemonicAt(0, KeyEvent.VK_1);
+	
 		tabbedPane.addTab("Chart", chartPanel);
 		tabbedPane.setMnemonicAt(1, KeyEvent.VK_2);
 		bodyPanel.add(tabbedPane);
@@ -213,31 +201,7 @@ public class Polar extends JFrame implements ActionListener {
 		frame.setSize(1200,800);
 		frame.setVisible(true);	
 	}
-	  private DefaultCategoryDataset createDataset() {
-
-		    String series1 = "Vistor";
-		    String series2 = "Unique Visitor";
-
-		    DefaultCategoryDataset dataset = new DefaultCategoryDataset();
-
-		    dataset.addValue(200, series1, "2016-12-19");
-		    dataset.addValue(150, series1, "2016-12-20");
-		    dataset.addValue(100, series1, "2016-12-21");
-		    dataset.addValue(210, series1, "2016-12-22");
-		    dataset.addValue(240, series1, "2016-12-23");
-		    dataset.addValue(195, series1, "2016-12-24");
-		    dataset.addValue(245, series1, "2016-12-25");
-
-		    dataset.addValue(150, series2, "2016-12-19");
-		    dataset.addValue(130, series2, "2016-12-20");
-		    dataset.addValue(95, series2, "2016-12-21");
-		    dataset.addValue(195, series2, "2016-12-22");
-		    dataset.addValue(200, series2, "2016-12-23");
-		    dataset.addValue(180, series2, "2016-12-24");
-		    dataset.addValue(230, series2, "2016-12-25");
-
-		    return dataset;
-		  }
+	  
 	public void actionPerformed (ActionEvent e){
 		JMenuItem source = (JMenuItem) (e.getSource());
 		// When click "Save"
@@ -282,6 +246,7 @@ public class Polar extends JFrame implements ActionListener {
                 dataTable.setModel(data.dataModel);
                 summaryTable.setModel(data.summaryModel);
                 table.setModel(data.model);
+                chartPanel=new ChartPanel(data.chart(isSpeed()));
             	}
                 
               }
@@ -307,6 +272,12 @@ public class Polar extends JFrame implements ActionListener {
 	}
 	void resetTable() {
 		 data.model.setRowCount(0);
+	}
+	public boolean isSpeed() {
+		return speed;
+	}
+	public void setSpeed(boolean speed) {
+		this.speed = speed;
 	}
 	public static void main(String [] args) {
 		Polar polar=new Polar();
