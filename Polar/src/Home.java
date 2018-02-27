@@ -1,3 +1,4 @@
+import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.FileDialog;
 import java.awt.event.ActionEvent;
@@ -31,9 +32,11 @@ public class Home extends JFrame{
 		JPanel centerPanel=new JPanel();
 		//display a label in panel.
 		JLabel timerLabel = new JLabel("Please Load A File!", SwingConstants.CENTER);
+		timerLabel.setFont (timerLabel.getFont ().deriveFont (38.0f));
 		centerPanel.add(timerLabel);
 		//display a button and can load the frame which is Polar
 		JButton button=new JButton("Load");
+		button.setPreferredSize(new Dimension(150,50));
 		//add action to this button can load data and show the Polar frame
 		button.addActionListener(new ActionListener() {
 			@Override
@@ -67,29 +70,28 @@ public class Home extends JFrame{
 	                }
 	                fr.close();
 	                br.close();
-	                //add data to tabel and display then hide this frame.
+	                //add data to table and display then hide this frame.
 	                data.tableData();
 	                polar.dataTable.setModel(data.dataModel);
 	                polar.summaryTable.setModel(data.summaryModel);
 	                polar.table.setModel(data.model);
 	                frame.setVisible(false);
+	                //add a new tab into tabbedPanel of Polar
 					ChartPanel chartPanel=new ChartPanel(data.chart(polar.isSpeed()));
 					polar.setChartPanel(chartPanel);
 					polar.GUI();
 					polar.tabbedPane.addTab("Chart", polar.getChartPanel());
-					polar.tabbedPane.setMnemonicAt(1, KeyEvent.VK_2);
 	                
 	            	}
 	                
 	              }
 	            catch (IOException ioe){
-	                
-	                System.out.println(ioe);
+	                ioe.printStackTrace();
 	              }	
 		
 			}
 		});
-		centerPanel.add(button);
+		centerPanel.add(button,BorderLayout.SOUTH);
 		//add the panel to box,make it center
         Box box = new Box(BoxLayout.Y_AXIS);
         box.add(Box.createVerticalGlue());

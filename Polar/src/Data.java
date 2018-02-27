@@ -19,7 +19,7 @@ public class Data {
     Data(){
 		
 	}
-	/*
+	/**
 	 * a method which add data to table
 	 */
 	public void tableData() {
@@ -59,64 +59,8 @@ public class Data {
        
 		
 	}
-	private DefaultCategoryDataset createDataset(boolean speed) {
-		//get data from header[IntTimes]
-        String [][]spl=getIntTimes();
-        
-        //Initialize
-        DefaultCategoryDataset dataset = new DefaultCategoryDataset();
-        int length=spl[0].length;
-        String [][]row1=new String[length][5];
-        String [][]row2=new String[length][6];
-        String [][]row3=new String[length][3];
-        String [][]row4=new String[length][6];
-        String [][]row5=new String[length][2];
-        //Divide into 5 parts
-        for(int i=0;i<length;i++) {
-        	row1[i]=spl[0][i].split("\t");
-        	row2[i]=spl[1][i].split("\t");
-        	row3[i]=spl[2][i].split("\t");
-        	row4[i]=spl[3][i].split("\t");
-        	row5[i]=spl[4][i].split("\t");
-        String series1;
-        if(speed) {
-        	series1 = "Speed(KM/H)";
-        }else {
-        	series1="Speed(MPH)";
-        }
-	   
-	    String series2 = "Cadence(rpm)";
-	    String series3 = "Altitude";
-	    String series4 = "Heart Rate(bpm)";
-	    String series5 = "Power(W)";
-
-	    if(speed) {
-	    	dataset.addValue((Integer.valueOf(row2[i][3])/128)*1.609, series1, row1[i][0]);
-	    }else {
-	    	dataset.addValue(Integer.valueOf(row2[i][3])/128, series1, row1[i][0]);
-	    }
-	    dataset.addValue(Integer.valueOf(row2[i][4]), series2, row1[i][0]);
-	    
-	    dataset.addValue(Integer.valueOf(row2[i][5]), series3, row1[i][0]);
-	    
-	    dataset.addValue(Integer.valueOf(row1[i][1]), series4, row1[i][0]);
-	    
-	    dataset.addValue(Integer.valueOf(row4[i][2]), series5, row1[i][0]);
-        }
-	    return dataset;
-	  }
-	public JFreeChart chart(boolean speed) {
-        CategoryDataset dataset = createDataset(speed);  
-        // Create chart
-        JFreeChart chart = ChartFactory.createLineChart(
-            "Polar", // Chart title
-            "Time", // X-Axis Label
-            "Number", // Y-Axis Label
-            dataset
-            );
-        return chart;
-	}
-	/*
+	
+	/**
 	 * re-write tableDate();
 	 * this is only for table of body data.
 	 * display data by different speed.
@@ -170,6 +114,10 @@ public class Data {
         }
 
 	}
+	/**
+	 * get data of summary table
+	 * @param speed
+	 */
 	public void summaryDate(boolean speed) {
         //summary body data
         String [][]spl=getIntTimes();
@@ -250,6 +198,57 @@ public class Data {
 
         summaryModel.addRow(dataRow);
         
+	}
+	/**
+	 * get the data of SMODE
+	 * @return
+	 */
+	public HashMap<String,String> getSMODE(){
+		HashMap<String,String> map=new HashMap<String,String>();
+		//get the line of SMODE and spilt it
+		String []smode=getParams().get("SMode").split("");
+	
+		//add data into speed
+		if(smode[0].equals("0"))
+			map.put("Speed", "off");
+		else
+			map.put("Speed", "on");
+		//add data into cadence
+		if(smode[1].equals("0"))
+			map.put("Cadence", "off");
+		else
+			map.put("Cadence", "on");
+		//add data into altitude
+		if(smode[2].equals("0"))
+			map.put("Altitude", "off");
+		else
+			map.put("Altitude", "on");
+		//add data into Power
+		if(smode[3].equals("0"))
+			map.put("Power", "off");
+		else
+			map.put("Power", "on");
+		//add data into Power Left Right Balance
+		if(smode[4].equals("0"))
+			map.put("Power Left Right Balance", "off");
+		else
+			map.put("Power Left Right Balance", "on");
+		//add data into Power Pedaling Index
+		if(smode[5].equals("0"))
+			map.put("Power Pedalling Index", "off");
+		else
+			map.put("Power Pedalling Index", "on");
+		//add data into HR/CC data
+		if(smode[6].equals("0"))
+			map.put("HR/CC data", "HR data only,");
+		else
+			map.put("HR/CC data", "HR + cycling data");
+		//add data into US/Euro unit
+		if(smode[7].equals("0"))
+			map.put("US/Euro unit", "Euro");
+		else
+			map.put("US/Euro unit", "US");
+		return map;
 	}
 	/**
 	 * get the data from 'IntTimes',then named every elements.
@@ -374,5 +373,79 @@ public class Data {
 		else
 			count=i-j;
 		return count;
+	}
+	
+	
+	
+	
+	///for chart
+	///for chart
+	///for chart
+	/**
+	 * add data to Chart
+	 * @param speed
+	 * @return
+	 */
+	private DefaultCategoryDataset createDataset(boolean speed) {
+		//get data from header[IntTimes]
+        String [][]spl=getIntTimes();
+        
+        //Initialize
+        DefaultCategoryDataset dataset = new DefaultCategoryDataset();
+        int length=spl[0].length;
+        String [][]row1=new String[length][5];
+        String [][]row2=new String[length][6];
+        String [][]row3=new String[length][3];
+        String [][]row4=new String[length][6];
+        String [][]row5=new String[length][2];
+        //Divide into 5 parts
+        for(int i=0;i<length;i++) {
+        	row1[i]=spl[0][i].split("\t");
+        	row2[i]=spl[1][i].split("\t");
+        	row3[i]=spl[2][i].split("\t");
+        	row4[i]=spl[3][i].split("\t");
+        	row5[i]=spl[4][i].split("\t");
+        String series1;
+        if(speed) {
+        	series1 = "Speed(0.1KM/H)";
+        }else {
+        	series1="Speed(0.1MPH)";
+        }
+	   //line's title
+	    String series2 = "Cadence(rpm)";
+	    String series3 = "Altitude";
+	    String series4 = "Heart Rate(bpm)";
+	    String series5 = "Power(W)";
+	    //loop every element in different time.
+	    if(speed) {
+	    	dataset.addValue((Integer.valueOf(row2[i][3])/128)*1.609*10, series1, row1[i][0]);
+	    }else {
+	    	dataset.addValue(Integer.valueOf(row2[i][3])/128*10, series1, row1[i][0]);
+	    }
+	    dataset.addValue(Integer.valueOf(row2[i][4]), series2, row1[i][0]);
+	    
+	    dataset.addValue(Integer.valueOf(row2[i][5]), series3, row1[i][0]);
+	    
+	    dataset.addValue(Integer.valueOf(row1[i][1]), series4, row1[i][0]);
+	    
+	    dataset.addValue(Integer.valueOf(row4[i][2]), series5, row1[i][0]);
+        }
+	    return dataset;
+	  }
+	/**
+	 * a whole chart to be returned
+	 * @param speed
+	 * @return
+	 */
+	public JFreeChart chart(boolean speed) {
+        CategoryDataset dataset = createDataset(speed);  
+        // Create chart
+        JFreeChart chart = ChartFactory.createLineChart(
+            "Polar", // Chart title
+            "Time", // X-Axis Label
+            "Number", // Y-Axis Label
+            dataset
+            );
+        return chart;
 	}
 }

@@ -7,6 +7,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.ComponentOrientation;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.FileDialog;
@@ -126,7 +127,7 @@ public class Polar extends JFrame implements ActionListener {
 				resetBodyTable();
 				resetSummaryTable();
 				Polar polar=new Polar();
-				
+				//identify speed is KM/H or MPH
 				if(s.equals("KM/H")) {
 					polar.setSpeed(true);
 				}else {
@@ -144,11 +145,14 @@ public class Polar extends JFrame implements ActionListener {
 			}
 		});
 		headerPanel.add(cb);
+		
+		
 		//create summary Panel in the table panel
 		//create summary Panel
 		JPanel summaryPane=new JPanel();
-		summaryPane.setPreferredSize(new Dimension(1200,150));
+		summaryPane.setPreferredSize(new Dimension(1200,100));
 		tablePanel.add(summaryPane);
+		
 		//create a JLabel in summaryPanel
 		JLabel summary=new JLabel("Summary",SwingConstants.CENTER);
 		summary.setFont (summary.getFont ().deriveFont (28.0f));
@@ -156,13 +160,15 @@ public class Polar extends JFrame implements ActionListener {
 		summary.setPreferredSize(new Dimension(1200,50));
 		summary.setMinimumSize(new Dimension(1200,50));
 		summaryPane.add(summary,BorderLayout.NORTH);
+		
 		//create summary table
 		summaryTable.setRowHeight(30);
 		summaryTable.setBackground(Color.YELLOW);
 		summaryTable.setPreferredScrollableViewportSize(summaryTable.getPreferredSize());
 		JScrollPane scrollPane3=new JScrollPane(summaryTable);
-		scrollPane3.setPreferredSize(new Dimension(1200,80));
+		scrollPane3.setPreferredSize(new Dimension(1200,50));
 		summaryPane.add(scrollPane3,BorderLayout.SOUTH);
+		
 		//date table
 		table.setRowHeight(30);
 		table.setBackground(Color.YELLOW);
@@ -181,14 +187,55 @@ public class Polar extends JFrame implements ActionListener {
 		dataTable.setPreferredScrollableViewportSize(dataTable.getPreferredSize());
 		dataTable.setBackground(Color.GRAY);
 		JScrollPane scrollPane1=new JScrollPane(dataTable);
-		scrollPane1.setPreferredSize(new Dimension(1200,480));
+		scrollPane1.setPreferredSize(new Dimension(1200,580));
 
+		
+		//create a panel display SMode
+		JPanel smodePanel=new JPanel();
+		smodePanel.setPreferredSize(new Dimension(1200,30));
+		smodePanel.setBackground(Color.WHITE);;
+		
+		smodePanel.add(new JLabel("Speed:"));
+		smodePanel.add(new JLabel(data.getSMODE().get("Speed")));
+		smodePanel.add(new JLabel(" "));
+		
+		smodePanel.add(new JLabel("Cadence:"));
+		smodePanel.add(new JLabel(data.getSMODE().get("Cadence")));
+		smodePanel.add(new JLabel(" "));
+		
+		smodePanel.add(new JLabel("Altitude:"));
+		smodePanel.add(new JLabel(data.getSMODE().get("Altitude")));
+		smodePanel.add(new JLabel(" "));
+		
+		smodePanel.add(new JLabel("Power:"));
+		smodePanel.add(new JLabel(data.getSMODE().get("Power")));
+		smodePanel.add(new JLabel(" "));
+		
+		smodePanel.add(new JLabel("Power Left Right Balance:"));
+		smodePanel.add(new JLabel(data.getSMODE().get("Power Left Right Balance")));
+		smodePanel.add(new JLabel(" "));
+		
+		smodePanel.add(new JLabel("Power Pedalling Index:"));
+		smodePanel.add(new JLabel(data.getSMODE().get("Power Pedalling Index")));
+		smodePanel.add(new JLabel(" "));
+		
+		smodePanel.add(new JLabel("HR/CC data:"));
+		smodePanel.add(new JLabel(data.getSMODE().get("HR/CC data")));
+		smodePanel.add(new JLabel(" "));
+		
+		smodePanel.add(new JLabel("US/Euro unit:"));
+		smodePanel.add(new JLabel(data.getSMODE().get("US/Euro unit")));
+		
+		
+		//panel in tabbedPane
+		JPanel dataPanel=new JPanel();
+		dataPanel.add(smodePanel,BorderLayout.NORTH);
+		dataPanel.add(scrollPane1,BorderLayout.SOUTH);
+		
 		//create a tab Panel to display data and chart
-		tabbedPane.setPreferredSize(new Dimension(1200,490));
-		tabbedPane.addTab("Data", scrollPane1);
+		tabbedPane.setPreferredSize(new Dimension(1200,550));
+		tabbedPane.addTab("Data", dataPanel);
 		tabbedPane.setMnemonicAt(0, KeyEvent.VK_1);
-	
-
 		bodyPanel.add(tabbedPane);
         
 		//Display frame in the center of window
