@@ -137,11 +137,6 @@ public class Polar extends JFrame implements ActionListener {
 				data.summaryDate(polar.isSpeed());
 				summaryTable.setModel(data.summaryModel);
 				dataTable.setModel(data.dataModel);
-				tabbedPane.remove(1);
-				ChartPanel chartPanel=new ChartPanel(data.chart(isSpeed()));
-				setChartPanel(chartPanel);
-				tabbedPane.addTab("Chart", getChartPanel());
-				tabbedPane.setMnemonicAt(1, KeyEvent.VK_2);
 			}
 		});
 		headerPanel.add(cb);
@@ -295,7 +290,7 @@ public class Polar extends JFrame implements ActionListener {
                 summaryTable.setModel(data.summaryModel);
                 table.setModel(data.model);
                 tabbedPane.remove(1);
-				ChartPanel chartPanel=new ChartPanel(data.chart(isSpeed()));
+				ChartPanel chartPanel=new ChartPanel(data.chart());
 				setChartPanel(chartPanel);
 				tabbedPane.addTab("Chart", getChartPanel());
 				tabbedPane.setMnemonicAt(1, KeyEvent.VK_2);

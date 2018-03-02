@@ -77,7 +77,7 @@ public class Home extends JFrame{
 	                polar.table.setModel(data.model);
 	                frame.setVisible(false);
 	                //add a new tab into tabbedPanel of Polar
-					ChartPanel chartPanel=new ChartPanel(data.chart(polar.isSpeed()));
+					ChartPanel chartPanel=new ChartPanel(data.chart());
 					polar.setChartPanel(chartPanel);
 					polar.GUI();
 					polar.tabbedPane.addTab("Chart", polar.getChartPanel());

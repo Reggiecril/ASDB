@@ -8,6 +8,11 @@ import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 import org.jfree.data.category.CategoryDataset;
 import org.jfree.data.category.DefaultCategoryDataset;
+import org.jfree.data.general.SeriesException;
+import org.jfree.data.time.Second;
+import org.jfree.data.time.TimeSeries;
+import org.jfree.data.time.TimeSeriesCollection;
+import org.jfree.data.xy.XYDataset;
 
 public class Data {
 	DefaultTableModel model =new DefaultTableModel();
@@ -386,18 +391,22 @@ public class Data {
 	 * @param speed
 	 * @return
 	 */
-	private DefaultCategoryDataset createDataset(boolean speed) {
+	private XYDataset createDataset() {
 		//get data from header[IntTimes]
         String [][]spl=getIntTimes();
         
         //Initialize
-        DefaultCategoryDataset dataset = new DefaultCategoryDataset();
         int length=spl[0].length;
         String [][]row1=new String[length][5];
         String [][]row2=new String[length][6];
         String [][]row3=new String[length][3];
         String [][]row4=new String[length][6];
         String [][]row5=new String[length][2];
+        double []dataSpeed=new double[length];
+        double []dataCadence=new double[length];
+        double []dataAltitude=new double[length];
+        double []dataHeart=new double[length];
+        double []dataPower=new double[length];
         //Divide into 5 parts
         for(int i=0;i<length;i++) {
         	row1[i]=spl[0][i].split("\t");
@@ -405,42 +414,84 @@ public class Data {
         	row3[i]=spl[2][i].split("\t");
         	row4[i]=spl[3][i].split("\t");
         	row5[i]=spl[4][i].split("\t");
-        String series1;
-        if(speed) {
-        	series1 = "Speed(0.1KM/H)";
-        }else {
-        	series1="Speed(0.1MPH)";
+        	dataSpeed[i]=Double.valueOf(row2[i][3])/128*1.609*10;
+        	dataCadence[i]=Double.valueOf(row2[i][4]);
+        	dataAltitude[i]=Double.valueOf(row2[i][5]);
+        	dataHeart[i]=Double.valueOf(row1[i][1]);
+        	dataPower[i]=Double.valueOf(row4[i][2]);
         }
-	   //line's title
-	    String series2 = "Cadence(rpm)";
-	    String series3 = "Altitude";
-	    String series4 = "Heart Rate(bpm)";
-	    String series5 = "Power(W)";
-	    //loop every element in different time.
-	    if(speed) {
-	    	dataset.addValue((Integer.valueOf(row2[i][3])/128)*1.609*10, series1, row1[i][0]);
-	    }else {
-	    	dataset.addValue(Integer.valueOf(row2[i][3])/128*10, series1, row1[i][0]);
-	    }
-	    dataset.addValue(Integer.valueOf(row2[i][4]), series2, row1[i][0]);
-	    
-	    dataset.addValue(Integer.valueOf(row2[i][5]), series3, row1[i][0]);
-	    
-	    dataset.addValue(Integer.valueOf(row1[i][1]), series4, row1[i][0]);
-	    
-	    dataset.addValue(Integer.valueOf(row4[i][2]), series5, row1[i][0]);
-        }
+        TimeSeriesCollection tsc= new TimeSeriesCollection();
+        tsc.addSeries(getChartData("Speed(mph)",length,dataSpeed));
+        tsc.addSeries(getChartData("Cadence(rpm)",length,dataCadence));
+        tsc.addSeries(getChartData("Altitude(ft)",length,dataAltitude));
+        tsc.addSeries(getChartData("Heart(bpm)",length,dataHeart));
+        tsc.addSeries(getChartData("Power(W)",length,dataPower));
+        XYDataset dataset =tsc;
+        
 	    return dataset;
 	  }
+	
+	public TimeSeries getChartData(String title,int length,double []itemData) {
+		TimeSeries series = new TimeSeries(title); 
+	    Second current = new Second( );
+		//generate plot chart
+        for(int j=0;j<length;j++) {
+        	//only run before (length-1)
+        	if(j==length-1) {
+        		//when loop to last time,end it
+        		break;
+        	}else {
+        		//calculate difference between now time and next time
+	        	double Difference=itemData[j+1]-itemData[j];
+	        	//get now time speed
+	        	double nowTime=itemData[j];
+	        	//when the difference is less than 0,display it decline slowly.
+	        	//when the difference is more than 0, display it rise slowly.
+	        	if(Difference<0) {
+	        		//make Difference to positive
+	        		Difference=0-Difference;
+	        		//get index of rise or decline
+	        		double value=Difference/1000;
+	        		for (int i = 0; i < 1000; i++) {
+		 		    	try {
+		 		    		nowTime = nowTime -value+Math.random()-0.50;
+		 		    		if(nowTime<0) {
+		 		    			nowTime=0;
+		 		    		}
+		 		    		series.add(current, new Double(nowTime) );                 
+		 		            current = ( Second ) current.next(); 
+		 		         } catch ( SeriesException e ) {
+		 		            System.err.println("Error adding to series");
+		 		         }
+		        	 }
+	        	}else {
+	        		double con=Difference/2000;
+	        		for (int i = 0; i < 2000; i++) {
+		 		    	try {
+		 		    		nowTime = nowTime +con+ Math.random()-0.50;
+		 		    		if(nowTime<0) {
+		 		    			nowTime=0;
+		 		    		}
+		 		    		series.add(current, new Double(nowTime) );                 
+		 		            current = ( Second ) current.next(); 
+		 		         } catch ( SeriesException e ) {
+		 		            System.err.println("Error adding to series");
+		 		         }
+		        	 }
+	        	}
+        	}
+        }
+        return series;
+	}
 	/**
 	 * a whole chart to be returned
 	 * @param speed
 	 * @return
 	 */
-	public JFreeChart chart(boolean speed) {
-        CategoryDataset dataset = createDataset(speed);  
+	public JFreeChart chart() {
+		XYDataset dataset = createDataset();  
         // Create chart
-        JFreeChart chart = ChartFactory.createLineChart(
+        JFreeChart chart = ChartFactory.createTimeSeriesChart(
             "Polar", // Chart title
             "Time", // X-Axis Label
             "Number", // Y-Axis Label
