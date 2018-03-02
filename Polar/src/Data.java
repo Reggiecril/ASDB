@@ -1,3 +1,6 @@
+import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -6,9 +9,20 @@ import javax.swing.table.DefaultTableModel;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
+import org.jfree.chart.axis.AxisLocation;
+import org.jfree.chart.axis.DateAxis;
+import org.jfree.chart.axis.DateTickUnit;
+import org.jfree.chart.axis.DateTickUnitType;
+import org.jfree.chart.axis.NumberAxis;
+import org.jfree.chart.axis.NumberTickUnit;
+import org.jfree.chart.axis.ValueAxis;
+import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.util.RelativeDateFormat;
 import org.jfree.data.category.CategoryDataset;
 import org.jfree.data.category.DefaultCategoryDataset;
 import org.jfree.data.general.SeriesException;
+import org.jfree.data.time.DateRange;
+import org.jfree.data.time.Minute;
 import org.jfree.data.time.Second;
 import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
@@ -402,6 +416,7 @@ public class Data {
         String [][]row3=new String[length][3];
         String [][]row4=new String[length][6];
         String [][]row5=new String[length][2];
+        String []dataTime=new String[length];
         double []dataSpeed=new double[length];
         double []dataCadence=new double[length];
         double []dataAltitude=new double[length];
@@ -414,6 +429,7 @@ public class Data {
         	row3[i]=spl[2][i].split("\t");
         	row4[i]=spl[3][i].split("\t");
         	row5[i]=spl[4][i].split("\t");
+        	dataTime[i]=row1[i][0];
         	dataSpeed[i]=Double.valueOf(row2[i][3])/128*1.609*10;
         	dataCadence[i]=Double.valueOf(row2[i][4]);
         	dataAltitude[i]=Double.valueOf(row2[i][5]);
@@ -421,26 +437,34 @@ public class Data {
         	dataPower[i]=Double.valueOf(row4[i][2]);
         }
         TimeSeriesCollection tsc= new TimeSeriesCollection();
-        tsc.addSeries(getChartData("Speed(mph)",length,dataSpeed));
-        tsc.addSeries(getChartData("Cadence(rpm)",length,dataCadence));
-        tsc.addSeries(getChartData("Altitude(ft)",length,dataAltitude));
-        tsc.addSeries(getChartData("Heart(bpm)",length,dataHeart));
-        tsc.addSeries(getChartData("Power(W)",length,dataPower));
+        tsc.addSeries(getChartData("Speed(mph)",length,dataSpeed,dataTime));
+        tsc.addSeries(getChartData("Cadence(rpm)",length,dataCadence,dataTime));
+        tsc.addSeries(getChartData("Altitude(ft)",length,dataAltitude,dataTime));
+        tsc.addSeries(getChartData("Heart(bpm)",length,dataHeart,dataTime));
+        tsc.addSeries(getChartData("Power(W)",length,dataPower,dataTime));
+       
         XYDataset dataset =tsc;
         
 	    return dataset;
 	  }
-	
-	public TimeSeries getChartData(String title,int length,double []itemData) {
-		TimeSeries series = new TimeSeries(title); 
-	    Second current = new Second( );
+	//get series 
+	public TimeSeries getChartData(String title,int length,double []itemData,String []itemTime){
+		TimeSeries series = new TimeSeries(title);
+		String []startTime=itemTime[0].split(":");
+		int hour=Integer.valueOf(startTime[0]);
+		int minute=Integer.valueOf(startTime[1]);
+		double s=Double.valueOf(startTime[2]);
+		int second=(int)s;
+	    Second current = new Second(second,minute,hour,1,1,2018);
 		//generate plot chart
         for(int j=0;j<length;j++) {
         	//only run before (length-1)
         	if(j==length-1) {
-        		//when loop to last time,end it
+        		double nowTime=itemData[j];
+        		series.add(current, new Double(nowTime)); 
         		break;
         	}else {
+        		int timeDifference=getTime(itemTime[j+1])-getTime(itemTime[j]);
         		//calculate difference between now time and next time
 	        	double Difference=itemData[j+1]-itemData[j];
 	        	//get now time speed
@@ -451,30 +475,30 @@ public class Data {
 	        		//make Difference to positive
 	        		Difference=0-Difference;
 	        		//get index of rise or decline
-	        		double value=Difference/1000;
-	        		for (int i = 0; i < 1000; i++) {
+	        		double value=Difference/timeDifference;
+	        		for (int i = 0; i < timeDifference; i++) {
 		 		    	try {
-		 		    		nowTime = nowTime -value+Math.random()-0.50;
+		 		    		nowTime = nowTime -value+(Math.random()-0.50)*5.0;
 		 		    		if(nowTime<0) {
 		 		    			nowTime=0;
 		 		    		}
 		 		    		series.add(current, new Double(nowTime) );                 
-		 		            current = ( Second ) current.next(); 
-		 		         } catch ( SeriesException e ) {
+		 		            current = (Second) current.next(); 
+		 		         } catch (SeriesException e) {
 		 		            System.err.println("Error adding to series");
 		 		         }
 		        	 }
 	        	}else {
-	        		double con=Difference/2000;
-	        		for (int i = 0; i < 2000; i++) {
+	        		double con=Difference/timeDifference;
+	        		for (int i = 0; i < timeDifference; i++) {
 		 		    	try {
-		 		    		nowTime = nowTime +con+ Math.random()-0.50;
+		 		    		nowTime = nowTime +con+ (Math.random()-0.50)*5.0;
 		 		    		if(nowTime<0) {
 		 		    			nowTime=0;
 		 		    		}
 		 		    		series.add(current, new Double(nowTime) );                 
 		 		            current = ( Second ) current.next(); 
-		 		         } catch ( SeriesException e ) {
+		 		         } catch (SeriesException e) {
 		 		            System.err.println("Error adding to series");
 		 		         }
 		        	 }
@@ -483,6 +507,14 @@ public class Data {
         }
         return series;
 	}
+	//calculate time to second and return to Integer
+	public int getTime(String time) {
+		int calculate=0;
+		String []timeRow=time.split(":");
+		double row2=Double.valueOf(timeRow[2]);
+		calculate=Integer.valueOf(timeRow[0])*3600+Integer.valueOf(timeRow[1])*60+(int)row2;
+		return calculate;
+	}
 	/**
 	 * a whole chart to be returned
 	 * @param speed
@@ -490,13 +522,25 @@ public class Data {
 	 */
 	public JFreeChart chart() {
 		XYDataset dataset = createDataset();  
+		
         // Create chart
         JFreeChart chart = ChartFactory.createTimeSeriesChart(
             "Polar", // Chart title
             "Time", // X-Axis Label
             "Number", // Y-Axis Label
-            dataset
+            dataset,
+            true,
+            false,
+            false
             );
+       
+		// Assign it to the chart
+		XYPlot plot = (XYPlot) chart.getPlot();
+		DateAxis rangeAxis = new DateAxis("Times");
+        rangeAxis.setTickUnit(new DateTickUnit(DateTickUnitType.MINUTE, 5));
+        rangeAxis.setDateFormatOverride(new SimpleDateFormat("HH:mm:ss"));
+        plot.setDomainAxis(rangeAxis);
+        
         return chart;
 	}
 }
