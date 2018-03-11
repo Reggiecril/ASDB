@@ -185,7 +185,11 @@ public class Data {
         }
     	
         //Total distance
-        dataRow[0]=getTrip().get("Distance");
+        if(speed) {
+        	dataRow[0]=getTrip().get("Distance");
+        }else {
+        	dataRow[0]=Integer.valueOf(getTrip().get("Distance"))/1.609;
+        }
         //Initialize Average speed
         double averageSpeed=Integer.valueOf(getTrip().get("AverageSpeed"));
         //Initialize Maximum speed

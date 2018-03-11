@@ -109,7 +109,7 @@ public class Polar extends JFrame implements ActionListener {
 		tablePanel.add(headerPanel);
 		
 		//Create a ComboBox to display two type data by MPH and KM/H
-		String []speedItem=new String[] {"MPH","KM/H"};
+		String []speedItem=new String[] {"MILES","KILOMETERS"};
 		cb=new JComboBox<String>(speedItem);
 		cb.setSelectedIndex(1);
 		cb.setPreferredSize(new Dimension(150,50));
