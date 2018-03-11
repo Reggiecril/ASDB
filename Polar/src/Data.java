@@ -1,3 +1,4 @@
+import java.awt.Color;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -410,7 +411,7 @@ public class Data {
         String [][]spl=getIntTimes();
         
         //Initialize
-        int length=spl[0].length;
+        int length=spl[0].length+1;
         String [][]row1=new String[length][5];
         String [][]row2=new String[length][6];
         String [][]row3=new String[length][3];
@@ -424,17 +425,32 @@ public class Data {
         double []dataPower=new double[length];
         //Divide into 5 parts
         for(int i=0;i<length;i++) {
-        	row1[i]=spl[0][i].split("\t");
-        	row2[i]=spl[1][i].split("\t");
-        	row3[i]=spl[2][i].split("\t");
-        	row4[i]=spl[3][i].split("\t");
-        	row5[i]=spl[4][i].split("\t");
-        	dataTime[i]=row1[i][0];
-        	dataSpeed[i]=Double.valueOf(row2[i][3])/128*1.609*10;
-        	dataCadence[i]=Double.valueOf(row2[i][4]);
-        	dataAltitude[i]=Double.valueOf(row2[i][5]);
-        	dataHeart[i]=Double.valueOf(row1[i][1]);
-        	dataPower[i]=Double.valueOf(row4[i][2]);
+        	if(i==0) {
+            	row1[i]=spl[0][i].split("\t");
+            	row2[i]=spl[1][i].split("\t");
+            	row3[i]=spl[2][i].split("\t");
+            	row4[i]=spl[3][i].split("\t");
+            	row5[i]=spl[4][i].split("\t");
+            	dataTime[i]="00:00:00.0";
+            	dataSpeed[i]=0;
+            	dataCadence[i]=0;
+            	dataAltitude[i]=Double.valueOf(row2[i][5]);
+            	dataHeart[i]=Double.valueOf(row1[i][1])*2;
+            	dataPower[i]=0;
+        	}else {
+	        	int j=i-1;
+	        	row1[i]=spl[0][j].split("\t");
+	        	row2[i]=spl[1][j].split("\t");
+	        	row3[i]=spl[2][j].split("\t");
+	        	row4[i]=spl[3][j].split("\t");
+	        	row5[i]=spl[4][j].split("\t");
+	        	dataTime[i]=row1[i][0];
+	        	dataSpeed[i]=Double.valueOf(row2[i][3])/128*1.609*10;
+	        	dataCadence[i]=Double.valueOf(row2[i][4])*1.5;
+	        	dataAltitude[i]=Double.valueOf(row2[i][5]);
+	        	dataHeart[i]=Double.valueOf(row1[i][1])*2;
+	        	dataPower[i]=Double.valueOf(row4[i][2]);
+        	}
         }
         TimeSeriesCollection tsc= new TimeSeriesCollection();
         tsc.addSeries(getChartData("Speed(mph)",length,dataSpeed,dataTime));
@@ -478,7 +494,7 @@ public class Data {
 	        		double value=Difference/timeDifference;
 	        		for (int i = 0; i < timeDifference; i++) {
 		 		    	try {
-		 		    		nowTime = nowTime -value+(Math.random()-0.50)*5.0;
+		 		    		nowTime = nowTime -value+(Math.random()-0.50)*3;
 		 		    		if(nowTime<0) {
 		 		    			nowTime=0;
 		 		    		}
@@ -488,11 +504,25 @@ public class Data {
 		 		            System.err.println("Error adding to series");
 		 		         }
 		        	 }
+	        	}else if(Difference==0){
+	        		for (int i = 0; i < timeDifference; i++) {
+		 		    	try {
+		 		    		nowTime = nowTime+(Math.random()-0.50)*3;
+		 		    		if(nowTime<0) {
+		 		    			nowTime=0;
+		 		    		}
+		 		    		series.add(current, new Double(nowTime) );                 
+		 		            current = (Second) current.next(); 
+		 		         } catch (SeriesException e) {
+		 		            System.err.println("Error adding to series");
+		 		         }
+		        	 }
+	        	
 	        	}else {
 	        		double con=Difference/timeDifference;
 	        		for (int i = 0; i < timeDifference; i++) {
 		 		    	try {
-		 		    		nowTime = nowTime +con+ (Math.random()-0.50)*5.0;
+		 		    		nowTime = nowTime +con+ (Math.random()-0.50)*3;
 		 		    		if(nowTime<0) {
 		 		    			nowTime=0;
 		 		    		}
@@ -527,20 +557,64 @@ public class Data {
         JFreeChart chart = ChartFactory.createTimeSeriesChart(
             "Polar", // Chart title
             "Time", // X-Axis Label
-            "Number", // Y-Axis Label
+            "", // Y-Axis Label
             dataset,
             true,
             false,
             false
             );
-       
 		// Assign it to the chart
 		XYPlot plot = (XYPlot) chart.getPlot();
+		
 		DateAxis rangeAxis = new DateAxis("Times");
         rangeAxis.setTickUnit(new DateTickUnit(DateTickUnitType.MINUTE, 5));
         rangeAxis.setDateFormatOverride(new SimpleDateFormat("HH:mm:ss"));
         plot.setDomainAxis(rangeAxis);
-        
+        //axis1
+        NumberAxis axis1 = new NumberAxis("");
+        axis1.setAutoRangeIncludesZero(false);
+        axis1.setLabelPaint(Color.green);
+        axis1.setTickLabelPaint(Color.green);
+        axis1.setRange(0, 360);
+        axis1.setTickUnit(new NumberTickUnit(20));
+        plot.setRangeAxis(0, axis1);
+        plot.setRangeAxisLocation(0, org.jfree.chart.axis.AxisLocation.BOTTOM_OR_LEFT);
+        //axis2
+        NumberAxis axis2 = new NumberAxis("");
+        axis2.setAutoRangeIncludesZero(false);
+        axis2.setLabelPaint(Color.blue);
+        axis2.setTickLabelPaint(Color.blue);
+        axis2.setRange(0, 270);
+        axis2.setTickUnit(new NumberTickUnit(15));
+        plot.setRangeAxis(1, axis2);
+        plot.setRangeAxisLocation(1, org.jfree.chart.axis.AxisLocation.BOTTOM_OR_LEFT);
+        //axis3
+        NumberAxis axis3 = new NumberAxis("");
+        axis3.setAutoRangeIncludesZero(false);
+        axis3.setLabelPaint(Color.red);
+        axis3.setTickLabelPaint(Color.red);
+        axis3.setRange(0, 10);
+        axis3.setTickUnit(new NumberTickUnit(0.5));
+        plot.setRangeAxis(2, axis3);
+        plot.setRangeAxisLocation(2, org.jfree.chart.axis.AxisLocation.BOTTOM_OR_LEFT);
+        //axis4
+        NumberAxis axis4 = new NumberAxis("");
+        axis4.setAutoRangeIncludesZero(false);
+        axis4.setLabelPaint(Color.orange);
+        axis4.setTickLabelPaint(Color.orange);
+        axis4.setRange(0, 180);
+        axis4.setTickUnit(new NumberTickUnit(10));
+        plot.setRangeAxis(3, axis4);
+        plot.setRangeAxisLocation(3, org.jfree.chart.axis.AxisLocation.BOTTOM_OR_RIGHT);
+        //axis5
+        NumberAxis axis5 = new NumberAxis("");
+        axis5.setAutoRangeIncludesZero(false);
+        axis5.setLabelPaint(Color.MAGENTA);
+        axis5.setTickLabelPaint(Color.MAGENTA);
+        axis5.setRange(0, 10);
+        axis5.setTickUnit(new NumberTickUnit(0.5));
+        plot.setRangeAxis(4, axis5);
+        plot.setRangeAxisLocation(4, org.jfree.chart.axis.AxisLocation.BOTTOM_OR_RIGHT);
         return chart;
 	}
 }
