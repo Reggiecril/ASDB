@@ -445,11 +445,11 @@ public class Data {
 	        	row4[i]=spl[3][j].split("\t");
 	        	row5[i]=spl[4][j].split("\t");
 	        	dataTime[i]=row1[i][0];
-	        	dataSpeed[i]=Double.valueOf(row2[i][3])/128*1.609*10;
-	        	dataCadence[i]=Double.valueOf(row2[i][4])*1.5;
+	        	dataSpeed[i]=Double.valueOf(row2[i][3])/128*1.609*18;
+	        	dataCadence[i]=Double.valueOf(row2[i][4])*2;
 	        	dataAltitude[i]=Double.valueOf(row2[i][5]);
 	        	dataHeart[i]=Double.valueOf(row1[i][1])*2;
-	        	dataPower[i]=Double.valueOf(row4[i][2]);
+	        	dataPower[i]=Double.valueOf(row4[i][2])*2.5;
         	}
         }
         TimeSeriesCollection tsc= new TimeSeriesCollection();
@@ -576,7 +576,7 @@ public class Data {
         axis1.setLabelPaint(Color.green);
         axis1.setTickLabelPaint(Color.green);
         axis1.setRange(0, 360);
-        axis1.setTickUnit(new NumberTickUnit(20));
+        axis1.setTickUnit(new NumberTickUnit(90));
         plot.setRangeAxis(0, axis1);
         plot.setRangeAxisLocation(0, org.jfree.chart.axis.AxisLocation.BOTTOM_OR_LEFT);
         //axis2
@@ -584,8 +584,8 @@ public class Data {
         axis2.setAutoRangeIncludesZero(false);
         axis2.setLabelPaint(Color.blue);
         axis2.setTickLabelPaint(Color.blue);
-        axis2.setRange(0, 270);
-        axis2.setTickUnit(new NumberTickUnit(15));
+        axis2.setRange(0, 180);
+        axis2.setTickUnit(new NumberTickUnit(45));
         plot.setRangeAxis(1, axis2);
         plot.setRangeAxisLocation(1, org.jfree.chart.axis.AxisLocation.BOTTOM_OR_LEFT);
         //axis3
@@ -593,8 +593,8 @@ public class Data {
         axis3.setAutoRangeIncludesZero(false);
         axis3.setLabelPaint(Color.red);
         axis3.setTickLabelPaint(Color.red);
-        axis3.setRange(0, 10);
-        axis3.setTickUnit(new NumberTickUnit(0.5));
+        axis3.setRange(0, 20);
+        axis3.setTickUnit(new NumberTickUnit(5));
         plot.setRangeAxis(2, axis3);
         plot.setRangeAxisLocation(2, org.jfree.chart.axis.AxisLocation.BOTTOM_OR_LEFT);
         //axis4
@@ -603,7 +603,7 @@ public class Data {
         axis4.setLabelPaint(Color.orange);
         axis4.setTickLabelPaint(Color.orange);
         axis4.setRange(0, 180);
-        axis4.setTickUnit(new NumberTickUnit(10));
+        axis4.setTickUnit(new NumberTickUnit(45));
         plot.setRangeAxis(3, axis4);
         plot.setRangeAxisLocation(3, org.jfree.chart.axis.AxisLocation.BOTTOM_OR_RIGHT);
         //axis5
@@ -611,8 +611,8 @@ public class Data {
         axis5.setAutoRangeIncludesZero(false);
         axis5.setLabelPaint(Color.MAGENTA);
         axis5.setTickLabelPaint(Color.MAGENTA);
-        axis5.setRange(0, 10);
-        axis5.setTickUnit(new NumberTickUnit(0.5));
+        axis5.setRange(0, 144);
+        axis5.setTickUnit(new NumberTickUnit(36));
         plot.setRangeAxis(4, axis5);
         plot.setRangeAxisLocation(4, org.jfree.chart.axis.AxisLocation.BOTTOM_OR_RIGHT);
         return chart;
