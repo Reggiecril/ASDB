@@ -50,11 +50,17 @@ public class Polar extends JFrame implements ActionListener {
 	JTable dataTable=new JTable();
 	JTable summaryTable=new JTable();
     private static String REGEX = "\\[(.*?)\\]";
-	Data data=new Data();
+	Data data;
 	private boolean speed;
 	JTabbedPane tabbedPane = new JTabbedPane();
 	ChartPanel chartPanel;
 	Polar(){
+	}
+	public Data getData() {
+		return data;
+	}
+	public void setData(Data data) {
+		this.data = data;
 	}
 	public void GUI() {
 		frame=new JFrame();
@@ -128,7 +134,7 @@ public class Polar extends JFrame implements ActionListener {
 				resetSummaryTable();
 				Polar polar=new Polar();
 				//identify speed is KM/H or MPH
-				if(s.equals("KM/H")) {
+				if(s.equals("KILOMETERS")) {
 					polar.setSpeed(true);
 				}else {
 					polar.setSpeed(false);
@@ -191,35 +197,35 @@ public class Polar extends JFrame implements ActionListener {
 		smodePanel.setBackground(Color.WHITE);;
 		
 		smodePanel.add(new JLabel("Speed:"));
-		smodePanel.add(new JLabel(data.getSMODE().get("Speed")));
+		smodePanel.add(new JLabel(getData().getSMODE().get("Speed")));
 		smodePanel.add(new JLabel(" "));
 		
 		smodePanel.add(new JLabel("Cadence:"));
-		smodePanel.add(new JLabel(data.getSMODE().get("Cadence")));
+		smodePanel.add(new JLabel(getData().getSMODE().get("Cadence")));
 		smodePanel.add(new JLabel(" "));
 		
 		smodePanel.add(new JLabel("Altitude:"));
-		smodePanel.add(new JLabel(data.getSMODE().get("Altitude")));
+		smodePanel.add(new JLabel(getData().getSMODE().get("Altitude")));
 		smodePanel.add(new JLabel(" "));
 		
 		smodePanel.add(new JLabel("Power:"));
-		smodePanel.add(new JLabel(data.getSMODE().get("Power")));
+		smodePanel.add(new JLabel(getData().getSMODE().get("Power")));
 		smodePanel.add(new JLabel(" "));
 		
 		smodePanel.add(new JLabel("Power Left Right Balance:"));
-		smodePanel.add(new JLabel(data.getSMODE().get("Power Left Right Balance")));
+		smodePanel.add(new JLabel(getData().getSMODE().get("Power Left Right Balance")));
 		smodePanel.add(new JLabel(" "));
 		
 		smodePanel.add(new JLabel("Power Pedalling Index:"));
-		smodePanel.add(new JLabel(data.getSMODE().get("Power Pedalling Index")));
+		smodePanel.add(new JLabel(getData().getSMODE().get("Power Pedalling Index")));
 		smodePanel.add(new JLabel(" "));
 		
 		smodePanel.add(new JLabel("HR/CC data:"));
-		smodePanel.add(new JLabel(data.getSMODE().get("HR/CC data")));
+		smodePanel.add(new JLabel(getData().getSMODE().get("HR/CC data")));
 		smodePanel.add(new JLabel(" "));
 		
 		smodePanel.add(new JLabel("US/Euro unit:"));
-		smodePanel.add(new JLabel(data.getSMODE().get("US/Euro unit")));
+		smodePanel.add(new JLabel(getData().getSMODE().get("US/Euro unit")));
 		
 		
 		//panel in tabbedPane
@@ -267,7 +273,7 @@ public class Polar extends JFrame implements ActionListener {
             	file = new File(fd.getDirectory(),fd.getFile());
                 FileReader fr = new FileReader(file);
                 BufferedReader br = new BufferedReader(fr);
-
+                Data data=new Data();
                 String aline;
                 int i=1;
                 //load file data to TextArea
@@ -285,15 +291,20 @@ public class Polar extends JFrame implements ActionListener {
                 }
                 fr.close();
                 br.close();
+                Polar polar=new Polar();
+                this.frame.setVisible(false);
+              //add data to table and display then hide this frame.
                 data.tableData();
-                dataTable.setModel(data.dataModel);
-                summaryTable.setModel(data.summaryModel);
-                table.setModel(data.model);
-                tabbedPane.remove(1);
+                polar.dataTable.setModel(data.dataModel);
+                polar.summaryTable.setModel(data.summaryModel);
+                polar.table.setModel(data.model);
+                polar.setData(data);
+                frame.setVisible(false);
+                //add a new tab into tabbedPanel of Polar
 				ChartPanel chartPanel=new ChartPanel(data.chart());
-				setChartPanel(chartPanel);
-				tabbedPane.addTab("Chart", getChartPanel());
-				tabbedPane.setMnemonicAt(1, KeyEvent.VK_2);
+				polar.setChartPanel(chartPanel);
+				polar.GUI();
+				polar.tabbedPane.addTab("Chart", polar.getChartPanel());
             	}
                 
               }

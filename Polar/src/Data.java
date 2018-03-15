@@ -36,7 +36,9 @@ public class Data {
     HashMap<Integer,String> allMap = new HashMap<Integer,String>();
     HashMap<String,Integer> headerMap=new HashMap<String,Integer>();
     private static String REGEX = "\\[(.*?)\\]";
-    Data(){
+    
+
+	Data(){
 		
 	}
 	/**
@@ -231,7 +233,8 @@ public class Data {
 		HashMap<String,String> map=new HashMap<String,String>();
 		//get the line of SMODE and spilt it
 		String []smode=getParams().get("SMode").split("");
-	
+		System.out.println(getParams().get("SMode"));
+		
 		//add data into speed
 		if(smode[0].equals("0"))
 			map.put("Speed", "off");

@@ -56,14 +56,12 @@ public class Home extends JFrame{
 	                //load file data to TextArea
 	                while ((aline=br.readLine()) != null){
 	                	//collect date to HashMap
-	                	polar.data.allMap.put(i,aline);
 	                	data.allMap.put(i, aline);
 	                	//collect header information
 	                	Pattern p=Pattern.compile(REGEX);
 	                	Matcher m=p.matcher(aline);
 	                	if(m.find()) {
 	                		//record the line number of each line.
-	                		polar.data.headerMap.put(m.group(1),i);
 	                		data.headerMap.put(m.group(1),i);
 	                	}
 	                	i++;
@@ -75,6 +73,7 @@ public class Home extends JFrame{
 	                polar.dataTable.setModel(data.dataModel);
 	                polar.summaryTable.setModel(data.summaryModel);
 	                polar.table.setModel(data.model);
+	                polar.setData(data);
 	                frame.setVisible(false);
 	                //add a new tab into tabbedPanel of Polar
 					ChartPanel chartPanel=new ChartPanel(data.chart());
