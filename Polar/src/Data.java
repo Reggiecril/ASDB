@@ -69,7 +69,7 @@ public class Data {
 	        Object []dataRow=new Object[7];
 	        float Speed=Integer.valueOf(row2[3]);
 	        dataRow[0]=row1[0];
-	        dataRow[1]=(Speed/128)*1.609;
+	        dataRow[1]=Math.round(Speed/10*1.609);
 	        dataRow[2]=row2[4];
 	        dataRow[3]=row2[5];
 	        dataRow[4]=row1[1];
@@ -104,7 +104,7 @@ public class Data {
 		        Object []dataRow=new Object[7];
 		        float Speed=Integer.valueOf(row2[3]);
 		        dataRow[0]=row1[0];
-		        dataRow[1]=(Speed/128)*1.609;
+		        dataRow[1]=Math.round(Speed/10*1.609);
 		        dataRow[2]=row2[4];
 		        dataRow[3]=row2[5];
 		        dataRow[4]=row1[1];
@@ -126,7 +126,7 @@ public class Data {
 		        Object []dataRow=new Object[7];
 		        float Speed=Integer.valueOf(row2[3]);
 		        dataRow[0]=row1[0];
-		        dataRow[1]=Speed/128;
+		        dataRow[1]=Math.round(Speed/10);
 		        dataRow[2]=row2[4];
 		        dataRow[3]=row2[5];
 		        dataRow[4]=row1[1];
@@ -143,7 +143,6 @@ public class Data {
 	 */
 	public void summaryDate(boolean speed) {
         //summary body data
-        String [][]spl=getIntTimes();
         if(speed) {
         	String[] columns1= {"Total distance covered","Average speed(KM/H)","Maximum speed(KM/H)","Average heart rate","Maximum heart rate","Minimum heart rate","Average power","Maximum power","Average altitude","Maximum altitude"};
         	summaryModel.setColumnIdentifiers(columns1);
@@ -155,35 +154,44 @@ public class Data {
         Object []dataRow=new Object[10];
         int sumHeart=0;
         int sumPower=0;
-        int length=spl[0].length;
+        int sumSpeed=0;
+        int maxSpeed=0;
         int maxHeart=0;
         int minHeart=200;
         int maxPower=0;
-        String [][]row1=new String[length][5];
-        String [][]row2=new String[length][6];
-        String [][]row3=new String[length][3];
-        String [][]row4=new String[length][6];
-        String [][]row5=new String[length][2];
+        int sumAltitude=0;
+        int maxAltitude=0;
+        double[]speedData=getHRData().get("Speed");
+        double[]heartData=getHRData().get("Heart");
+        double[]powerData=getHRData().get("Power");
+        double[]altitudeData=getHRData().get("Altitude");
+        int length=speedData.length;
         //loop to calculate 
         for(int i=0;i<length;i++) {
-        	row1[i]=spl[0][i].split("\t");
-        	row2[i]=spl[1][i].split("\t");
-        	row3[i]=spl[2][i].split("\t");
-        	row4[i]=spl[3][i].split("\t");
-        	row5[i]=spl[4][i].split("\t");
-        	sumHeart+=Integer.valueOf(row1[i][3]);
-        	sumPower+=Integer.valueOf(row4[i][2]);
+        	
+        	sumSpeed+=(int)speedData[i];
+        	sumHeart+=(int)heartData[i];
+        	sumPower+=(int)powerData[i];
+        	sumAltitude+=(int)altitudeData[i];
+        	//loop to select a max speed rate
+        	if(maxSpeed<(int)speedData[i]) {
+        		maxSpeed=(int)speedData[i];
+        	}
+        	//loop to select a max altitude rate
+        	if(maxAltitude<(int)altitudeData[i]) {
+        		maxAltitude=(int)altitudeData[i];
+        	}
         	//loop to select a max heart rate
-        	if(maxHeart<Integer.valueOf(row1[i][4])) {
-        		maxHeart=Integer.valueOf(row1[i][4]);
+        	if(maxHeart<(int)heartData[i]) {
+        		maxHeart=(int)heartData[i];
         	}
         	//loop to select a min heart rate
-        	if(minHeart>Integer.valueOf(row1[i][2])) {
-        		minHeart=Integer.valueOf(row1[i][2]);
+        	if(minHeart>(int)heartData[i]) {
+        		minHeart=(int)heartData[i];
         	}        	
         	//loop to select a max power
-        	if(maxPower<Integer.valueOf(row4[i][2])) {
-        		maxPower=Integer.valueOf(row4[i][2]);
+        	if(maxPower<(int)powerData[i]) {
+        		maxPower=(int)powerData[i];
         	}
         }
     	
@@ -191,37 +199,37 @@ public class Data {
         if(speed) {
         	dataRow[0]=getTrip().get("Distance");
         }else {
-        	dataRow[0]=Integer.valueOf(getTrip().get("Distance"))/1.609;
+        	dataRow[0]=Math.round(Integer.valueOf(getTrip().get("Distance"))/1.609);
         }
         //Initialize Average speed
-        double averageSpeed=Integer.valueOf(getTrip().get("AverageSpeed"));
+        double averageSpeed=sumSpeed/length;
         //Initialize Maximum speed
-        double maximumSpeed=Integer.valueOf(getTrip().get("MaximumSpeed"));
+        double maximumSpeed=maxSpeed;
         if(speed) {
             //Average speed
-            dataRow[1]=(averageSpeed/128)*1.609;
+            dataRow[1]=Math.round((averageSpeed/10)*0.62);
             //Maximum speed
-            dataRow[2]=(maximumSpeed/128)*1.609;
+            dataRow[2]=Math.round((maximumSpeed/10)*0.62);
         }else {
             //Average speed
-            dataRow[1]=averageSpeed/128;
+            dataRow[1]=averageSpeed/10;
             //Maximum speed
-            dataRow[2]=maximumSpeed/128;
+            dataRow[2]=maximumSpeed/10;
         }
         //Average heart rate
-        dataRow[3]=sumHeart/length;
+        dataRow[3]=Math.round(sumHeart/length);
         //Maximum heart rate
         dataRow[4]=maxHeart;
         //Minimum heart rate
         dataRow[5]=minHeart;
         //Average power
-        dataRow[6]=sumPower/length;
+        dataRow[6]=Math.round(sumPower/length);
         //Maximum power
         dataRow[7]=maxPower;
         //Average altitude
-        dataRow[8]=getTrip().get("AverageAltitude");
+        dataRow[8]=Math.round(sumAltitude/length);
         //Maximum altitude
-        dataRow[9]=getTrip().get("MaximumAltitude");
+        dataRow[9]=maxAltitude;
 
         summaryModel.addRow(dataRow);
         
