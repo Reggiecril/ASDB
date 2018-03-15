@@ -18,6 +18,7 @@ import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.axis.NumberTickUnit;
 import org.jfree.chart.axis.ValueAxis;
 import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.chart.util.RelativeDateFormat;
 import org.jfree.data.category.CategoryDataset;
 import org.jfree.data.category.DefaultCategoryDataset;
@@ -36,7 +37,7 @@ public class Data {
     HashMap<Integer,String> allMap = new HashMap<Integer,String>();
     HashMap<String,Integer> headerMap=new HashMap<String,Integer>();
     private static String REGEX = "\\[(.*?)\\]";
-    
+   
 
 	Data(){
 		
@@ -233,7 +234,6 @@ public class Data {
 		HashMap<String,String> map=new HashMap<String,String>();
 		//get the line of SMODE and spilt it
 		String []smode=getParams().get("SMode").split("");
-		System.out.println(getParams().get("SMode"));
 		
 		//add data into speed
 		if(smode[0].equals("0"))
@@ -278,12 +278,38 @@ public class Data {
 		return map;
 	}
 	/**
+	 * get the data from 'HRData',spilt to Heart,Speed,Cadence,Altitude,Power.
+	 * @return
+	 */
+	public HashMap<String,double[]> getHRData(){
+		String []header=getHeaderData("HRData");
+		HashMap<String,double[]> map=new HashMap<String,double[]>();	
+		double []heart =new double[header.length];
+		double []speed =new double[header.length];
+		double []cadence =new double[header.length];
+		double []altitude =new double[header.length];
+		double []power =new double[header.length];
+		for(int i=0;i<header.length;i++) {
+			String []line=header[i].split("\t");
+			heart[i]=Double.valueOf(line[0]);
+			speed[i]=Double.valueOf(line[1]);
+			cadence[i]=Double.valueOf(line[2]);
+			altitude[i]=Double.valueOf(line[3]);
+			power[i]=Double.valueOf(line[4]);
+		}
+		map.put("Heart", heart);
+		map.put("Speed", speed);
+		map.put("Cadence", cadence);
+		map.put("Altitude", altitude);
+		map.put("Power", power);
+		return map;
+	}
+	/**
 	 * get the data from 'IntTimes',then named every elements.
 	 * @return
 	 */
 	public String[][] getIntTimes(){
 		String []header=getHeaderData("IntTimes");
-		HashMap<String,String[]> map=new HashMap<String,String[]>();
 		int j=0;
 		String[][]spl=new String[5][count("IntTimes")/5];
 		for(int i=0;i<count("IntTimes");i+=5) {
@@ -413,136 +439,65 @@ public class Data {
 	 * @param speed
 	 * @return
 	 */
-	private XYDataset createDataset() {
-		//get data from header[IntTimes]
-        String [][]spl=getIntTimes();
+	private XYDataset createDataset(String strings) {
         
         //Initialize
-        int length=spl[0].length+1;
-        String [][]row1=new String[length][5];
-        String [][]row2=new String[length][6];
-        String [][]row3=new String[length][3];
-        String [][]row4=new String[length][6];
-        String [][]row5=new String[length][2];
-        String []dataTime=new String[length];
-        double []dataSpeed=new double[length];
-        double []dataCadence=new double[length];
-        double []dataAltitude=new double[length];
-        double []dataHeart=new double[length];
-        double []dataPower=new double[length];
-        //Divide into 5 parts
-        for(int i=0;i<length;i++) {
-        	if(i==0) {
-            	row1[i]=spl[0][i].split("\t");
-            	row2[i]=spl[1][i].split("\t");
-            	row3[i]=spl[2][i].split("\t");
-            	row4[i]=spl[3][i].split("\t");
-            	row5[i]=spl[4][i].split("\t");
-            	dataTime[i]="00:00:00.0";
-            	dataSpeed[i]=0;
-            	dataCadence[i]=0;
-            	dataAltitude[i]=Double.valueOf(row2[i][5]);
-            	dataHeart[i]=Double.valueOf(row1[i][1])*2;
-            	dataPower[i]=0;
-        	}else {
-	        	int j=i-1;
-	        	row1[i]=spl[0][j].split("\t");
-	        	row2[i]=spl[1][j].split("\t");
-	        	row3[i]=spl[2][j].split("\t");
-	        	row4[i]=spl[3][j].split("\t");
-	        	row5[i]=spl[4][j].split("\t");
-	        	dataTime[i]=row1[i][0];
-	        	dataSpeed[i]=Double.valueOf(row2[i][3])/128*1.609*18;
-	        	dataCadence[i]=Double.valueOf(row2[i][4])*2;
-	        	dataAltitude[i]=Double.valueOf(row2[i][5]);
-	        	dataHeart[i]=Double.valueOf(row1[i][1])*2;
-	        	dataPower[i]=Double.valueOf(row4[i][2])*2.5;
-        	}
-        }
+
+
         TimeSeriesCollection tsc= new TimeSeriesCollection();
-        tsc.addSeries(getChartData("Speed(mph)",length,dataSpeed,dataTime));
-        tsc.addSeries(getChartData("Cadence(rpm)",length,dataCadence,dataTime));
-        tsc.addSeries(getChartData("Altitude(ft)",length,dataAltitude,dataTime));
-        tsc.addSeries(getChartData("Heart(bpm)",length,dataHeart,dataTime));
-        tsc.addSeries(getChartData("Power(W)",length,dataPower,dataTime));
-       
+        
+        tsc.addSeries(getChartData().get(strings));
         XYDataset dataset =tsc;
         
 	    return dataset;
 	  }
 	//get series 
-	public TimeSeries getChartData(String title,int length,double []itemData,String []itemTime){
-		TimeSeries series = new TimeSeries(title);
-		String []startTime=itemTime[0].split(":");
-		int hour=Integer.valueOf(startTime[0]);
-		int minute=Integer.valueOf(startTime[1]);
-		double s=Double.valueOf(startTime[2]);
-		int second=(int)s;
-	    Second current = new Second(second,minute,hour,1,1,2018);
-		//generate plot chart
-        for(int j=0;j<length;j++) {
-        	//only run before (length-1)
-        	if(j==length-1) {
-        		double nowTime=itemData[j];
-        		series.add(current, new Double(nowTime)); 
-        		break;
-        	}else {
-        		int timeDifference=getTime(itemTime[j+1])-getTime(itemTime[j]);
-        		//calculate difference between now time and next time
-	        	double Difference=itemData[j+1]-itemData[j];
-	        	//get now time speed
-	        	double nowTime=itemData[j];
-	        	//when the difference is less than 0,display it decline slowly.
-	        	//when the difference is more than 0, display it rise slowly.
-	        	if(Difference<0) {
-	        		//make Difference to positive
-	        		Difference=0-Difference;
-	        		//get index of rise or decline
-	        		double value=Difference/timeDifference;
-	        		for (int i = 0; i < timeDifference; i++) {
-		 		    	try {
-		 		    		nowTime = nowTime -value+(Math.random()-0.50)*3;
-		 		    		if(nowTime<0) {
-		 		    			nowTime=0;
-		 		    		}
-		 		    		series.add(current, new Double(nowTime) );                 
-		 		            current = (Second) current.next(); 
-		 		         } catch (SeriesException e) {
-		 		            System.err.println("Error adding to series");
-		 		         }
-		        	 }
-	        	}else if(Difference==0){
-	        		for (int i = 0; i < timeDifference; i++) {
-		 		    	try {
-		 		    		nowTime = nowTime+(Math.random()-0.50)*3;
-		 		    		if(nowTime<0) {
-		 		    			nowTime=0;
-		 		    		}
-		 		    		series.add(current, new Double(nowTime) );                 
-		 		            current = (Second) current.next(); 
-		 		         } catch (SeriesException e) {
-		 		            System.err.println("Error adding to series");
-		 		         }
-		        	 }
-	        	
-	        	}else {
-	        		double con=Difference/timeDifference;
-	        		for (int i = 0; i < timeDifference; i++) {
-		 		    	try {
-		 		    		nowTime = nowTime +con+ (Math.random()-0.50)*3;
-		 		    		if(nowTime<0) {
-		 		    			nowTime=0;
-		 		    		}
-		 		    		series.add(current, new Double(nowTime) );                 
-		 		            current = ( Second ) current.next(); 
-		 		         } catch (SeriesException e) {
-		 		            System.err.println("Error adding to series");
-		 		         }
-		        	 }
-	        	}
-        	}
+	public HashMap<String,TimeSeries> getChartData(){
+		HashMap<String,TimeSeries> map=new HashMap<String,TimeSeries>();
+		final TimeSeries series1 = new TimeSeries("Speed");
+		
+		TimeSeries series2 = new TimeSeries("Cadence");
+		TimeSeries series3 = new TimeSeries("Altitude");
+		TimeSeries series4 = new TimeSeries("Heart");
+		TimeSeries series5 = new TimeSeries("Power");
+		
+        double []dataSpeed=getHRData().get("Speed");
+        double []dataCadence=getHRData().get("Cadence");
+        double []dataAltitude=getHRData().get("Altitude");
+        double []dataHeart=getHRData().get("Heart");
+        double []dataPower=getHRData().get("Power");
+        
+	    Second current = new Second(0,0,0,1,1,2018);
+	    for(double nowTime:dataSpeed) {
+        	series1.add(current, new Double((nowTime/10)*0.62) );                 
+	 		current = (Second) current.next(); 
+	    }
+	    Second current1 = new Second(0,0,0,1,1,2018);
+	    for(double nowTime:dataCadence) {
+        	series2.add(current1, new Double(nowTime) );                 
+	 		current1 = (Second) current1.next(); 
+	    }
+	    Second current2 = new Second(0,0,0,1,1,2018);
+	    for(double nowTime:dataAltitude) {
+        	series3.add(current2, new Double(nowTime) );                 
+        	current2 = (Second) current2.next();
+	    }
+	    Second current3 = new Second(0,0,0,1,1,2018);
+	    for(double nowTime:dataHeart) {
+        	series4.add(current3, new Double(nowTime) );                 
+        	current3 = (Second) current3.next(); 
+	    }
+	    Second current4 = new Second(0,0,0,1,1,2018);
+        for(double nowTime:dataPower) {
+	        	series5.add(current4, new Double(nowTime) );                 
+	        	current4 = (Second) current4.next(); 
         }
-        return series;
+        map.put("Speed", series1);
+        map.put("Cadence", series2);
+        map.put("Altitude", series3);
+        map.put("Heart", series4);
+        map.put("Power", series5);
+        return map;
 	}
 	//calculate time to second and return to Integer
 	public int getTime(String time) {
@@ -558,7 +513,7 @@ public class Data {
 	 * @return
 	 */
 	public JFreeChart chart() {
-		XYDataset dataset = createDataset();  
+		XYDataset dataset = createDataset("Speed");  
 		
         // Create chart
         JFreeChart chart = ChartFactory.createTimeSeriesChart(
@@ -578,50 +533,86 @@ public class Data {
         rangeAxis.setDateFormatOverride(new SimpleDateFormat("HH:mm:ss"));
         plot.setDomainAxis(rangeAxis);
         //axis1
+        XYDataset dataset1 = createDataset("Speed");
         NumberAxis axis1 = new NumberAxis("");
+        XYLineAndShapeRenderer r1 = new XYLineAndShapeRenderer();
+        r1.setSeriesPaint(0,new Color(134,179,51)); 
+        r1.setSeriesShapesVisible(0,  false);
         axis1.setAutoRangeIncludesZero(false);
-        axis1.setLabelPaint(Color.green);
-        axis1.setTickLabelPaint(Color.green);
-        axis1.setRange(0, 360);
-        axis1.setTickUnit(new NumberTickUnit(90));
+        axis1.setLabelPaint(new Color(134,179,51));
+        axis1.setTickLabelPaint(new Color(134,179,51));
+        axis1.setRange(0, 33);
+        axis1.setTickUnit(new NumberTickUnit(11));
         plot.setRangeAxis(0, axis1);
+        plot.mapDatasetToRangeAxis(3,1);
         plot.setRangeAxisLocation(0, org.jfree.chart.axis.AxisLocation.BOTTOM_OR_LEFT);
+        plot.setDataset(0, dataset1);
+        plot.mapDatasetToRangeAxis(0,0);
+        plot.setRenderer(0, r1);
         //axis2
+        XYDataset dataset2 = createDataset("Cadence");
         NumberAxis axis2 = new NumberAxis("");
+        XYLineAndShapeRenderer r2 = new XYLineAndShapeRenderer();
+        r2.setSeriesPaint(0, Color.ORANGE); 
+        r2.setSeriesShapesVisible(0,  false);
         axis2.setAutoRangeIncludesZero(false);
-        axis2.setLabelPaint(Color.blue);
-        axis2.setTickLabelPaint(Color.blue);
-        axis2.setRange(0, 180);
-        axis2.setTickUnit(new NumberTickUnit(45));
+        axis2.setLabelPaint(Color.ORANGE);
+        axis2.setTickLabelPaint(Color.ORANGE);
+        axis2.setRange(0, 125);
+        axis2.setTickUnit(new NumberTickUnit(25));
         plot.setRangeAxis(1, axis2);
         plot.setRangeAxisLocation(1, org.jfree.chart.axis.AxisLocation.BOTTOM_OR_LEFT);
+        plot.setDataset(1, dataset2);
+        plot.mapDatasetToRangeAxis(1,1);
+        plot.setRenderer(1, r2);
         //axis3
+        XYDataset dataset3 = createDataset("Altitude");
         NumberAxis axis3 = new NumberAxis("");
+        XYLineAndShapeRenderer r3 = new XYLineAndShapeRenderer();
+        r3.setSeriesPaint(0, Color.BLACK); 
+        r3.setSeriesShapesVisible(0,  false);
         axis3.setAutoRangeIncludesZero(false);
-        axis3.setLabelPaint(Color.red);
-        axis3.setTickLabelPaint(Color.red);
-        axis3.setRange(0, 20);
-        axis3.setTickUnit(new NumberTickUnit(5));
+        axis3.setLabelPaint(Color.BLACK);
+        axis3.setTickLabelPaint(Color.BLACK);
+        axis3.setRange(307, 314);
+        axis3.setTickUnit(new NumberTickUnit(1));
         plot.setRangeAxis(2, axis3);
         plot.setRangeAxisLocation(2, org.jfree.chart.axis.AxisLocation.BOTTOM_OR_LEFT);
+        plot.setDataset(2, dataset3);
+        plot.mapDatasetToRangeAxis(2,2);
+        plot.setRenderer(2, r3);
         //axis4
+        XYDataset dataset4 = createDataset("Heart");
         NumberAxis axis4 = new NumberAxis("");
+        XYLineAndShapeRenderer r4 = new XYLineAndShapeRenderer();
+        r4.setSeriesPaint(0, new Color(254,67,101)); 
+        r4.setSeriesShapesVisible(0,  false);
         axis4.setAutoRangeIncludesZero(false);
-        axis4.setLabelPaint(Color.orange);
-        axis4.setTickLabelPaint(Color.orange);
-        axis4.setRange(0, 180);
-        axis4.setTickUnit(new NumberTickUnit(45));
+        axis4.setLabelPaint(new Color(254,67,101));
+        axis4.setTickLabelPaint(new Color(254,67,101));
+        axis4.setRange(0, 200);
+        axis4.setTickUnit(new NumberTickUnit(50));
         plot.setRangeAxis(3, axis4);
         plot.setRangeAxisLocation(3, org.jfree.chart.axis.AxisLocation.BOTTOM_OR_RIGHT);
+        plot.setDataset(3, dataset4);
+        plot.mapDatasetToRangeAxis(3,3);
+        plot.setRenderer(3, r4);
         //axis5
+        XYDataset dataset5 = createDataset("Power");
+        XYLineAndShapeRenderer r5 = new XYLineAndShapeRenderer();
+        r5.setSeriesPaint(0, new Color(164,34,168)); 
+        r5.setSeriesShapesVisible(0,  false);
         NumberAxis axis5 = new NumberAxis("");
         axis5.setAutoRangeIncludesZero(false);
-        axis5.setLabelPaint(Color.MAGENTA);
-        axis5.setTickLabelPaint(Color.MAGENTA);
-        axis5.setRange(0, 144);
-        axis5.setTickUnit(new NumberTickUnit(36));
+        axis5.setLabelPaint(new Color(164,34,168));
+        axis5.setTickLabelPaint(new Color(164,34,168));
+        axis5.setRange(0, 650);
+        axis5.setTickUnit(new NumberTickUnit(100));
         plot.setRangeAxis(4, axis5);
         plot.setRangeAxisLocation(4, org.jfree.chart.axis.AxisLocation.BOTTOM_OR_RIGHT);
+        plot.setDataset(4, dataset5);
+        plot.mapDatasetToRangeAxis(4,4);
+        plot.setRenderer(4, r5);
         return chart;
 	}
 }
