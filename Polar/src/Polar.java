@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.text.DecimalFormat;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.ComponentOrientation;
@@ -54,6 +55,7 @@ public class Polar extends JFrame implements ActionListener {
 	private boolean speed;
 	JTabbedPane tabbedPane = new JTabbedPane();
 	ChartPanel chartPanel;
+	DecimalFormat df = new DecimalFormat("0.00");
 	Polar(){
 	}
 	public Data getData() {
@@ -226,7 +228,8 @@ public class Polar extends JFrame implements ActionListener {
 		
 		smodePanel.add(new JLabel("US/Euro unit:"));
 		smodePanel.add(new JLabel(getData().getSMODE().get("US/Euro unit")));
-
+		
+		smodePanel.add(new JLabel(df.format(getData().getNP()/301)));
 		
 		//panel in tabbedPane
 		JPanel dataPanel=new JPanel();

@@ -1,5 +1,7 @@
 import java.awt.Color;
+import java.math.BigDecimal;
 import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
@@ -37,6 +39,7 @@ public class Data {
 	HashMap<Integer, String> allMap = new HashMap<Integer, String>();
 	HashMap<String, Integer> headerMap = new HashMap<String, Integer>();
 	private static String REGEX = "\\[(.*?)\\]";
+	DecimalFormat df = new DecimalFormat("0.00");
 
 	Data() {
 
@@ -328,6 +331,7 @@ public class Data {
 		double[] cadence = new double[header.length];
 		double[] altitude = new double[header.length];
 		double[] power = new double[header.length];
+		double[] powerBalance = new double[header.length];
 		for (int i = 0; i < header.length; i++) {
 			String[] line = header[i].split("\t");
 			heart[i] = Double.valueOf(line[0]);
@@ -335,12 +339,14 @@ public class Data {
 			cadence[i] = Double.valueOf(line[2]);
 			altitude[i] = Double.valueOf(line[3]);
 			power[i] = Double.valueOf(line[4]);
+			powerBalance[i] = Double.valueOf(line[5]);
 		}
 		map.put("Heart", heart);
 		map.put("Speed", speed);
 		map.put("Cadence", cadence);
 		map.put("Altitude", altitude);
 		map.put("Power", power);
+		map.put("PowerBalance", powerBalance);
 		return map;
 	}
 
@@ -487,88 +493,100 @@ public class Data {
 	 * ==========================================================================================================
 	 * ==========================================================================================================
 	 */
-
+	public int getFTP() {
+		int ftp=301;
+		return ftp;
+	}
 	/**
-	 * calculate power by 30s.
+	 * calculate PowerBalance
 	 * 
 	 * @return
 	 */
-
-	public HashMap<Integer, double[]> get30sPower() {
-		double[] power = getHRData().get("Power");
-		HashMap<Integer, double[]> map = new HashMap<Integer, double[]>();
-		double[] average = new double[30];
-		int j = 0;
-		for (int i = 0; i < power.length; i++) {
-			if(power[i]!=0) {
-				if (i != 0) {
-	
-					if (i % 30 == 0) {
-						j++;
-						average = new double[30];
-					}
-					average[i % 30] = power[i];
-	
-				} else {
-					average[0] = power[0];
-				}
-			}else {
-				continue;
-			}
-			map.put(j, average);
-			if(power[i]!=0) {
-			System.out.println(j+"  "+power[i]);
-			}
+	public HashMap<String, Integer> getPowerBalance() {
+		// load "PowerBalance" data
+		double[] powerBalance = getHRData().get("PowerBalance");
+		HashMap<String, Integer> map=new HashMap<String, Integer>();
+		int totalLPB = 0,totalPI = 0;
+		for (int i = 0; i < powerBalance.length; i++) {
+			//calculate PI
+			int PI=(int)(powerBalance[i]-(powerBalance[i]%256))/256;
+			//calculate LPB
+			int LPB=(int)powerBalance[i]%256;
+			//calculate total
+			totalPI+=PI;
+			totalLPB+=LPB;
 		}
+		//calculate average
+		int averageLPB=(int)totalLPB/powerBalance.length;
+		int averagePI=(int)totalPI/powerBalance.length;
+		//put PI,LPB,RPB into map
+		map.put("PI", averagePI);
+		map.put("LPB", averageLPB);
+		map.put("RPB",1-averageLPB);
 		return map;
 	}
 
+
 	/**
-	 * Calculate NP
+	 * calculate NP
+	 * 
+	 * @return
 	 */
-	public void getNP() {
-		HashMap<Integer, double[]> map = get30sPower();
-
-		// get average of 30s part power
-		double totalFour = 0;
-		int mapSize = map.size();
-		for (int i = 0; i < mapSize; i++) {
-			int different = count("HRData") % 30;
-
-			double total = 0;
-			double average = 0;
-			int j=0;
-			for (double totalSingal : map.get(i)) {
-				
-				total += totalSingal;
-				if(totalSingal!=0) {
-					j++;
+	public int getNP() {
+		// load "power" data
+		double[] power = getHRData().get("Power");
+		// init total fourth power
+		double FourthPower = 0;
+		for (int i = 0; i < power.length; i++) {
+			// stop program before 30s
+			if (i + 29 < power.length) {
+				double total = 0;
+				// get total amount of each 30s interval
+				for (int x = 0; x < 30; x++) {
+					total += power[i + x];
 				}
-//				System.out.println(i+" "+totalSingal+"Total"+total+ " J:"+j);
-				System.out.println(i+" number "+totalSingal);
+				double TotalFour = Math.pow(total / 30, 4);
+				// calculate total fourth power
+				FourthPower += TotalFour;
 			}
-			
-			// if this loop is last time
-			if (i == map.size() - 1) {
-				// if last interval is not 30s
-				if (j != 30) {
-					average = total / j;
-				} else {
-					average = total / 30;
-				}
-
-			} else {
-				average = total / 30;
-			}
-			double fourTime = average * average * average * average;
-			totalFour += fourTime;
-			System.out.println("Line" + i + " totalFour:" + totalFour+" fourTime"+fourTime);
 		}
-		double averageTotalFour = totalFour / mapSize;
-		System.out.println("totalFour" + totalFour + "mapSize" + mapSize + "averageTotalFour" + averageTotalFour);
-		double averageNP = Math.sqrt(Math.sqrt(averageTotalFour));
-		System.out.println(averageNP);
+		// calculate total average
+		double TotalAverage = FourthPower / (power.length - 29);
+		// get fourth root of average
+		int result = (int) Math.round(Math.pow(TotalAverage, 0.25));
+		double a=232;
+		double b=301;
+		double f=(a/b);
+		 DecimalFormat df = new DecimalFormat("#");
+	        df.setMaximumFractionDigits(2);
+	        System.out.printf(df.format(f));
+		return result;
 	}
+	/**
+	 * calculate IF
+	 * 
+	 * @return
+	 */
+	public double getIF() {
+		int NP=getNP();
+		int FTP=getFTP();
+		double IF=NP/FTP;
+		return IF;
+	}
+
+	/**
+	 * calculate TSS
+	 * 
+	 * @return
+	 */
+	public double getTSS() {
+		double TSS=0;
+		
+		return TSS;
+	}
+
+
+
 //	public void getFTP() {
 //		double[] power = getHRData().get("Power");
 //		double total=0;
