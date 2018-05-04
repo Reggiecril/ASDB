@@ -229,8 +229,6 @@ public class Polar extends JFrame implements ActionListener {
 		smodePanel.add(new JLabel("US/Euro unit:"));
 		smodePanel.add(new JLabel(getData().getSMODE().get("US/Euro unit")));
 		
-		smodePanel.add(new JLabel(df.format(getData().getNP()/301)));
-		
 		//panel in tabbedPane
 		JPanel dataPanel=new JPanel();
 		dataPanel.add(smodePanel,BorderLayout.NORTH);

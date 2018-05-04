@@ -59,7 +59,7 @@ public class Data {
 	 * a method which add data to table
 	 */
 	public void tableData() {
-		getNP();
+		getTSS();
 		// header table date
 		Object[] row = new Object[3];
 		String[] columns = { "Date", "Start Time", "Interval" };
@@ -493,8 +493,8 @@ public class Data {
 	 * ==========================================================================================================
 	 * ==========================================================================================================
 	 */
-	public int getFTP() {
-		int ftp=301;
+	public double getFTP() {
+		double ftp=301;
 		return ftp;
 	}
 	/**
@@ -557,9 +557,9 @@ public class Data {
 		double a=232;
 		double b=301;
 		double f=(a/b);
-		 DecimalFormat df = new DecimalFormat("#");
-	        df.setMaximumFractionDigits(2);
-	        System.out.printf(df.format(f));
+		DecimalFormat df = new DecimalFormat("#");
+        df.setMaximumFractionDigits(2);
+        System.out.println(df.format(f));
 		return result;
 	}
 	/**
@@ -568,8 +568,8 @@ public class Data {
 	 * @return
 	 */
 	public double getIF() {
-		int NP=getNP();
-		int FTP=getFTP();
+		double NP=getNP();
+		double FTP=getFTP();
 		double IF=NP/FTP;
 		return IF;
 	}
@@ -581,7 +581,11 @@ public class Data {
 	 */
 	public double getTSS() {
 		double TSS=0;
-		
+		int time=count("HRData");
+		int NP=getNP();
+		double IF=getIF();
+		double FTP=getFTP();
+		TSS=((time*NP*IF)/(FTP*3600))*100;
 		return TSS;
 	}
 
