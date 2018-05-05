@@ -59,7 +59,7 @@ public class Data {
 	 * a method which add data to table
 	 */
 	public void tableData() {
-		getTSS();
+
 		// header table date
 		Object[] row = new Object[3];
 		String[] columns = { "Date", "Start Time", "Interval" };
@@ -70,29 +70,33 @@ public class Data {
 		row[1] = getParams().get("StartTime");
 		row[2] = getParams().get("Interval");
 		model.addRow(row);
-		// table body data
-		String[][] spl = getIntTimes();
-		String[] columns1 = { "Time", "Speed(km/h)", "Cadence(rpm)", "Altitude", "Heart rate", "Heart Rate(MAX)",
-				"Power in watts" };
-		dataModel.setColumnIdentifiers(columns1);
-		for (int i = 0; i < spl[0].length; i++) {
-			String[] row1 = spl[0][i].split("\t");
-			String[] row2 = spl[1][i].split("\t");
-			String[] row3 = spl[2][i].split("\t");
-			String[] row4 = spl[3][i].split("\t");
-			String[] row5 = spl[4][i].split("\t");
-			Object[] dataRow = new Object[7];
-			float Speed = Integer.valueOf(row2[3]);
-			dataRow[0] = row1[0];
-			dataRow[1] = Math.round(Speed / 10 * 1.609);
-			dataRow[2] = row2[4];
-			dataRow[3] = row2[5];
-			dataRow[4] = row1[1];
-			dataRow[5] = row1[4];
-			dataRow[6] = row4[2];
-			dataModel.addRow(dataRow);
+		if (ifExist("IntTimes")) {
+			// table body data
+			String[][] spl = getIntTimes();
+			String[] columns1 = { "Time", "Speed(km/h)", "Cadence(rpm)", "Altitude", "Heart rate", "Heart Rate(MAX)",
+					"Power in watts" };
+			dataModel.setColumnIdentifiers(columns1);
+			for (int i = 0; i < spl[0].length; i++) {
+				String[] row1 = spl[0][i].split("\t");
+				String[] row2 = spl[1][i].split("\t");
+				String[] row3 = spl[2][i].split("\t");
+				String[] row4 = spl[3][i].split("\t");
+				String[] row5 = spl[4][i].split("\t");
+				Object[] dataRow = new Object[7];
+				float Speed = Integer.valueOf(row2[3]);
+				dataRow[0] = row1[0];
+				dataRow[1] = Math.round(Speed / 10 * 1.609);
+				dataRow[2] = row2[4];
+				dataRow[3] = row2[5];
+				dataRow[4] = row1[1];
+				dataRow[5] = row1[4];
+				dataRow[6] = row4[2];
+				dataModel.addRow(dataRow);
+			}
 		}
+
 		summaryDate(true);
+
 		// create chart panel
 
 	}
@@ -216,10 +220,12 @@ public class Data {
 		}
 
 		// Total distance
-		if (speed) {
-			dataRow[0] = getTrip().get("Distance");
-		} else {
-			dataRow[0] = Math.round(Integer.valueOf(getTrip().get("Distance")) / 1.609);
+		if (ifExist("Trip") == true) {
+			if (speed) {
+				dataRow[0] = getTrip().get("Distance");
+			} else {
+				dataRow[0] = Math.round(Integer.valueOf(getTrip().get("Distance")) / 1.609);
+			}
 		}
 		// Initialize Average speed
 		double averageSpeed = sumSpeed / length;
@@ -339,14 +345,21 @@ public class Data {
 			cadence[i] = Double.valueOf(line[2]);
 			altitude[i] = Double.valueOf(line[3]);
 			power[i] = Double.valueOf(line[4]);
-			powerBalance[i] = Double.valueOf(line[5]);
+			if (line.length == 5) {
+				powerBalance = null;
+
+			} else {
+				powerBalance[i] = Double.valueOf(line[5]);
+			}
 		}
 		map.put("Heart", heart);
 		map.put("Speed", speed);
 		map.put("Cadence", cadence);
 		map.put("Altitude", altitude);
 		map.put("Power", power);
-		map.put("PowerBalance", powerBalance);
+		if (powerBalance != null) {
+			map.put("PowerBalance", powerBalance);
+		}
 		return map;
 	}
 
@@ -485,6 +498,42 @@ public class Data {
 	}
 
 	/**
+	 * determine a header if exist;
+	 * 
+	 * @param header
+	 * @return
+	 */
+	public boolean ifExist(String header) {
+		boolean result;
+		if (headerMap.get(header) == null) {
+			result = false;
+		} else if (count(header) == 0) {
+			result = false;
+		} else {
+			result = true;
+		}
+		return result;
+	}
+
+	/**
+	 * determine a header if exist;
+	 * 
+	 * @param header
+	 * @return
+	 */
+	public boolean existPowerBalance() {
+		boolean result;
+		String[] header = getHeaderData("HRData");
+		String[] line = header[0].split("\t");
+		if (line.length == 5) {
+			result = false;
+		} else {
+			result = true;
+		}
+		return result;
+	}
+
+	/**
 	 * ==========================================================================================================
 	 * ==========================================================================================================
 	 * ==========================================================================================================
@@ -494,9 +543,10 @@ public class Data {
 	 * ==========================================================================================================
 	 */
 	public double getFTP() {
-		double ftp=301;
+		double ftp = 301;
 		return ftp;
 	}
+
 	/**
 	 * calculate PowerBalance
 	 * 
@@ -505,27 +555,26 @@ public class Data {
 	public HashMap<String, Integer> getPowerBalance() {
 		// load "PowerBalance" data
 		double[] powerBalance = getHRData().get("PowerBalance");
-		HashMap<String, Integer> map=new HashMap<String, Integer>();
-		int totalLPB = 0,totalPI = 0;
+		HashMap<String, Integer> map = new HashMap<String, Integer>();
+		int totalLPB = 0, totalPI = 0;
 		for (int i = 0; i < powerBalance.length; i++) {
-			//calculate PI
-			int PI=(int)(powerBalance[i]-(powerBalance[i]%256))/256;
-			//calculate LPB
-			int LPB=(int)powerBalance[i]%256;
-			//calculate total
-			totalPI+=PI;
-			totalLPB+=LPB;
+			// calculate PI
+			int PI = (int) (powerBalance[i] - (powerBalance[i] % 256)) / 256;
+			// calculate LPB
+			int LPB = (int) powerBalance[i] % 256;
+			// calculate total
+			totalPI += PI;
+			totalLPB += LPB;
 		}
-		//calculate average
-		int averageLPB=(int)totalLPB/powerBalance.length;
-		int averagePI=(int)totalPI/powerBalance.length;
-		//put PI,LPB,RPB into map
+		// calculate average
+		int averageLPB = (int) totalLPB / powerBalance.length;
+		int averagePI = (int) totalPI / powerBalance.length;
+		// put PI,LPB,RPB into map
 		map.put("PI", averagePI);
 		map.put("LPB", averageLPB);
-		map.put("RPB",1-averageLPB);
+		map.put("RPB", 100 - averageLPB);
 		return map;
 	}
-
 
 	/**
 	 * calculate NP
@@ -554,23 +603,18 @@ public class Data {
 		double TotalAverage = FourthPower / (power.length - 29);
 		// get fourth root of average
 		int result = (int) Math.round(Math.pow(TotalAverage, 0.25));
-		double a=232;
-		double b=301;
-		double f=(a/b);
-		DecimalFormat df = new DecimalFormat("#");
-        df.setMaximumFractionDigits(2);
-        System.out.println(df.format(f));
 		return result;
 	}
+
 	/**
 	 * calculate IF
 	 * 
 	 * @return
 	 */
 	public double getIF() {
-		double NP=getNP();
-		double FTP=getFTP();
-		double IF=NP/FTP;
+		double NP = getNP();
+		double FTP = getFTP();
+		double IF = NP / FTP;
 		return IF;
 	}
 
@@ -579,29 +623,30 @@ public class Data {
 	 * 
 	 * @return
 	 */
-	public double getTSS() {
-		double TSS=0;
-		int time=count("HRData");
-		int NP=getNP();
-		double IF=getIF();
-		double FTP=getFTP();
-		TSS=((time*NP*IF)/(FTP*3600))*100;
-		return TSS;
+	public int getTSS() {
+		double TSS = 0;
+		
+		// calculate TSS
+		int time = getTime();
+		int NP = getNP();
+		double IF = getIF();
+		double FTP = getFTP();
+		TSS = ((time * NP * IF) / (FTP * 3600)) * 100;
+		int result = (int) TSS;
+		return result;
 	}
 
-
-
-//	public void getFTP() {
-//		double[] power = getHRData().get("Power");
-//		double total=0;
-//		for (int i = 0; i < power.length; i++) {
-//			if(i<1800) {
-//				total+=power[i];
-//			}
-//		}
-//		double average=total/1800;
-//		System.out.println(average);
-//	}
+	// public void getFTP() {
+	// double[] power = getHRData().get("Power");
+	// double total=0;
+	// for (int i = 0; i < power.length; i++) {
+	// if(i<1800) {
+	// total+=power[i];
+	// }
+	// }
+	// double average=total/1800;
+	// System.out.println(average);
+	// }
 	/**
 	 * ==========================================================================================================
 	 * ==========================================================================================================
@@ -611,26 +656,10 @@ public class Data {
 	 * ==========================================================================================================
 	 * ==========================================================================================================
 	 */
+
 	/// for chart
 	/// for chart
 	/// for chart
-	/**
-	 * add data to Chart
-	 * 
-	 * @param speed
-	 * @return
-	 */
-	private XYDataset createDataset(String strings) {
-
-		// Initialize
-
-		TimeSeriesCollection tsc = new TimeSeriesCollection();
-
-		tsc.addSeries(getChartData().get(strings));
-		XYDataset dataset = tsc;
-
-		return dataset;
-	}
 
 	// get series
 	public HashMap<String, TimeSeries> getChartData() {
@@ -647,31 +676,36 @@ public class Data {
 		double[] dataAltitude = getHRData().get("Altitude");
 		double[] dataHeart = getHRData().get("Heart");
 		double[] dataPower = getHRData().get("Power");
-
+		int interval = Integer.valueOf(getParams().get("Interval"));
 		Second current = new Second(0, 0, 0, 1, 1, 2018);
 		for (double nowTime : dataSpeed) {
 			series1.add(current, new Double((nowTime / 10) * 0.62));
-			current = (Second) current.next();
+			for (int i = 0; i < interval; i++)
+				current = (Second) current.next();
 		}
 		Second current1 = new Second(0, 0, 0, 1, 1, 2018);
 		for (double nowTime : dataCadence) {
 			series2.add(current1, new Double(nowTime));
-			current1 = (Second) current1.next();
+			for (int i = 0; i < interval; i++)
+				current1 = (Second) current1.next();
 		}
 		Second current2 = new Second(0, 0, 0, 1, 1, 2018);
 		for (double nowTime : dataAltitude) {
 			series3.add(current2, new Double(nowTime));
-			current2 = (Second) current2.next();
+			for (int i = 0; i < interval; i++)
+				current2 = (Second) current2.next();
 		}
 		Second current3 = new Second(0, 0, 0, 1, 1, 2018);
 		for (double nowTime : dataHeart) {
 			series4.add(current3, new Double(nowTime));
-			current3 = (Second) current3.next();
+			for (int i = 0; i < interval; i++)
+				current3 = (Second) current3.next();
 		}
 		Second current4 = new Second(0, 0, 0, 1, 1, 2018);
 		for (double nowTime : dataPower) {
 			series5.add(current4, new Double(nowTime));
-			current4 = (Second) current4.next();
+			for (int i = 0; i < interval; i++)
+				current4 = (Second) current4.next();
 		}
 		map.put("Speed", series1);
 		map.put("Cadence", series2);
@@ -682,116 +716,20 @@ public class Data {
 	}
 
 	// calculate time to second and return to Integer
-	public int getTime(String time) {
+	public int getTime() {
 		int calculate = 0;
-		String[] timeRow = time.split(":");
-		double row2 = Double.valueOf(timeRow[2]);
-		calculate = Integer.valueOf(timeRow[0]) * 3600 + Integer.valueOf(timeRow[1]) * 60 + (int) row2;
+		// calculate time
+		String[] timeSplit = getParams().get("Length").split(":");
+		int hour = Integer.valueOf(timeSplit[0]);
+		int minute = Integer.valueOf(timeSplit[1]);
+		String[] spiltSecond = timeSplit[2].split("");
+		int second = Integer.valueOf(spiltSecond[0] + spiltSecond[1]);
+		int millsecond = Integer.valueOf(spiltSecond[3]);
+		if (millsecond >= 5) {
+			second++;
+		}
+		calculate = hour * 3600 + minute * 60 + second;
 		return calculate;
 	}
 
-	/**
-	 * a whole chart to be returned
-	 * 
-	 * @param speed
-	 * @return
-	 */
-	public JFreeChart chart() {
-		XYDataset dataset = createDataset("Speed");
-
-		// Create chart
-		JFreeChart chart = ChartFactory.createTimeSeriesChart("Polar", // Chart title
-				"Time", // X-Axis Label
-				"", // Y-Axis Label
-				dataset, true, false, false);
-		// Assign it to the chart
-		XYPlot plot = (XYPlot) chart.getPlot();
-
-		DateAxis rangeAxis = new DateAxis("Times");
-		rangeAxis.setTickUnit(new DateTickUnit(DateTickUnitType.MINUTE, 5));
-		rangeAxis.setDateFormatOverride(new SimpleDateFormat("HH:mm:ss"));
-		plot.setDomainAxis(rangeAxis);
-		// axis1
-		XYDataset dataset1 = createDataset("Speed");
-		NumberAxis axis1 = new NumberAxis("");
-		XYLineAndShapeRenderer r1 = new XYLineAndShapeRenderer();
-		r1.setSeriesPaint(0, new Color(134, 179, 51));
-		r1.setSeriesShapesVisible(0, false);
-		axis1.setAutoRangeIncludesZero(false);
-		axis1.setLabelPaint(new Color(134, 179, 51));
-		axis1.setTickLabelPaint(new Color(134, 179, 51));
-		axis1.setRange(0, 33);
-		axis1.setTickUnit(new NumberTickUnit(11));
-		plot.setRangeAxis(0, axis1);
-		plot.mapDatasetToRangeAxis(3, 1);
-		plot.setRangeAxisLocation(0, org.jfree.chart.axis.AxisLocation.BOTTOM_OR_LEFT);
-		plot.setDataset(0, dataset1);
-		plot.mapDatasetToRangeAxis(0, 0);
-		plot.setRenderer(0, r1);
-		// axis2
-		XYDataset dataset2 = createDataset("Cadence");
-		NumberAxis axis2 = new NumberAxis("");
-		XYLineAndShapeRenderer r2 = new XYLineAndShapeRenderer();
-		r2.setSeriesPaint(0, Color.ORANGE);
-		r2.setSeriesShapesVisible(0, false);
-		axis2.setAutoRangeIncludesZero(false);
-		axis2.setLabelPaint(Color.ORANGE);
-		axis2.setTickLabelPaint(Color.ORANGE);
-		axis2.setRange(0, 125);
-		axis2.setTickUnit(new NumberTickUnit(25));
-		plot.setRangeAxis(1, axis2);
-		plot.setRangeAxisLocation(1, org.jfree.chart.axis.AxisLocation.BOTTOM_OR_LEFT);
-		plot.setDataset(1, dataset2);
-		plot.mapDatasetToRangeAxis(1, 1);
-		plot.setRenderer(1, r2);
-		// axis3
-		XYDataset dataset3 = createDataset("Altitude");
-		NumberAxis axis3 = new NumberAxis("");
-		XYLineAndShapeRenderer r3 = new XYLineAndShapeRenderer();
-		r3.setSeriesPaint(0, Color.BLACK);
-		r3.setSeriesShapesVisible(0, false);
-		axis3.setAutoRangeIncludesZero(false);
-		axis3.setLabelPaint(Color.BLACK);
-		axis3.setTickLabelPaint(Color.BLACK);
-		axis3.setRange(307, 314);
-		axis3.setTickUnit(new NumberTickUnit(1));
-		plot.setRangeAxis(2, axis3);
-		plot.setRangeAxisLocation(2, org.jfree.chart.axis.AxisLocation.BOTTOM_OR_LEFT);
-		plot.setDataset(2, dataset3);
-		plot.mapDatasetToRangeAxis(2, 2);
-		plot.setRenderer(2, r3);
-		// axis4
-		XYDataset dataset4 = createDataset("Heart");
-		NumberAxis axis4 = new NumberAxis("");
-		XYLineAndShapeRenderer r4 = new XYLineAndShapeRenderer();
-		r4.setSeriesPaint(0, new Color(254, 67, 101));
-		r4.setSeriesShapesVisible(0, false);
-		axis4.setAutoRangeIncludesZero(false);
-		axis4.setLabelPaint(new Color(254, 67, 101));
-		axis4.setTickLabelPaint(new Color(254, 67, 101));
-		axis4.setRange(0, 200);
-		axis4.setTickUnit(new NumberTickUnit(50));
-		plot.setRangeAxis(3, axis4);
-		plot.setRangeAxisLocation(3, org.jfree.chart.axis.AxisLocation.BOTTOM_OR_RIGHT);
-		plot.setDataset(3, dataset4);
-		plot.mapDatasetToRangeAxis(3, 3);
-		plot.setRenderer(3, r4);
-		// axis5
-		XYDataset dataset5 = createDataset("Power");
-		XYLineAndShapeRenderer r5 = new XYLineAndShapeRenderer();
-		r5.setSeriesPaint(0, new Color(164, 34, 168));
-		r5.setSeriesShapesVisible(0, false);
-		NumberAxis axis5 = new NumberAxis("");
-		axis5.setAutoRangeIncludesZero(false);
-		axis5.setLabelPaint(new Color(164, 34, 168));
-		axis5.setTickLabelPaint(new Color(164, 34, 168));
-		axis5.setRange(0, 650);
-		axis5.setTickUnit(new NumberTickUnit(100));
-		plot.setRangeAxis(4, axis5);
-		plot.setRangeAxisLocation(4, org.jfree.chart.axis.AxisLocation.BOTTOM_OR_RIGHT);
-		plot.setDataset(4, dataset5);
-		plot.mapDatasetToRangeAxis(4, 4);
-		plot.setRenderer(4, r5);
-		return chart;
-	}
 }

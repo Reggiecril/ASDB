@@ -6,6 +6,7 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.ComponentOrientation;
@@ -21,124 +22,148 @@ import java.awt.TextArea;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
+import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
 import java.util.HashMap;
 import java.util.regex.*;
 
-import org.jfree.chart.ChartFactory;  
+import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartFrame;
+import org.jfree.chart.ChartMouseEvent;
+import org.jfree.chart.ChartMouseListener;
 import org.jfree.chart.ChartPanel;
-import org.jfree.chart.ChartUtilities;  
-import org.jfree.chart.JFreeChart;  
-import org.jfree.chart.axis.CategoryAxis;  
-import org.jfree.chart.axis.ValueAxis;  
-import org.jfree.chart.plot.CategoryPlot;  
-import org.jfree.chart.plot.PlotOrientation;  
-import org.jfree.chart.title.TextTitle;  
-import org.jfree.data.category.CategoryDataset;  
-import org.jfree.data.category.DefaultCategoryDataset;  
+import org.jfree.chart.ChartRenderingInfo;
+import org.jfree.chart.ChartUtilities;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.axis.CategoryAxis;
+import org.jfree.chart.axis.DateAxis;
+import org.jfree.chart.axis.DateTickUnit;
+import org.jfree.chart.axis.DateTickUnitType;
+import org.jfree.chart.axis.NumberAxis;
+import org.jfree.chart.axis.NumberTickUnit;
+import org.jfree.chart.axis.ValueAxis;
+import org.jfree.chart.entity.ChartEntity;
+import org.jfree.chart.plot.CategoryPlot;
+import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
+import org.jfree.chart.title.TextTitle;
+import org.jfree.data.category.CategoryDataset;
+import org.jfree.data.category.DefaultCategoryDataset;
+import org.jfree.data.time.TimeSeriesCollection;
+import org.jfree.data.xy.XYDataset;
+import org.jfree.ui.RectangleEdge;
 
-public class Polar extends JFrame implements ActionListener {
+public class Polar extends JFrame implements ActionListener,ChartMouseListener {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	JFrame frame;
 	JMenuBar menuBar;
 	JMenu fileMenu, fileSpace, fileHelp;
-	JMenuItem newMenuLoad,newMenuSave,newMenuExit,newMenuAbout;
+	JMenuItem newMenuLoad, newMenuSave, newMenuExit, newMenuAbout;
 	JButton button;
 	FileDialog fd;
 	File file;
 	JComboBox<String> cb;
 	JLabel body;
-	JTable table=new JTable();
-	JTable dataTable=new JTable();
-	JTable summaryTable=new JTable();
-    private static String REGEX = "\\[(.*?)\\]";
+	JTable table = new JTable();
+	JTable dataTable = new JTable();
+	JTable summaryTable = new JTable();
+	private static String REGEX = "\\[(.*?)\\]";
 	Data data;
 	private boolean speed;
 	JTabbedPane tabbedPane = new JTabbedPane();
-	ChartPanel chartPanel;
-	DecimalFormat df = new DecimalFormat("0.00");
-	Polar(){
+	DecimalFormat oneDecimal = new DecimalFormat("0.0");
+	DecimalFormat twoDecimal = new DecimalFormat("0.00");
+	private ChartPanel chartPanel;
+	Polar() {
 	}
+
 	public Data getData() {
 		return data;
 	}
+
 	public void setData(Data data) {
 		this.data = data;
 	}
+
 	public void GUI() {
-		frame=new JFrame();
+		frame = new JFrame();
 		Container contain = frame.getContentPane();
-		//create menu bar
-		menuBar = new JMenuBar();	
-		
-		//File Menu in the menu bar
+		// create menu bar
+		menuBar = new JMenuBar();
+
+		// File Menu in the menu bar
 		fileMenu = new JMenu("File");
 		fileMenu.setFont(new Font("sans-serif", Font.PLAIN, 20));
 		menuBar.add(fileMenu);
 
 		fileSpace = new JMenu("   ");
 		menuBar.add(fileSpace);
-		
+
 		fileHelp = new JMenu("Help");
 		fileHelp.setFont(new Font("sans-serif", Font.PLAIN, 20));
 		menuBar.add(fileHelp);
 
-		//files inside the menu bar(File ->...) 
-		newMenuLoad = new JMenuItem("Load",new ImageIcon("Icon/load.png"));
+		// files inside the menu bar(File ->...)
+		newMenuLoad = new JMenuItem("Load", new ImageIcon("Icon/load.png"));
 		newMenuLoad.setFont(new Font("sans-serif", Font.PLAIN, 20));
 		fileMenu.add(newMenuLoad);
 		newMenuLoad.addActionListener(this);
-		
-		newMenuSave = new JMenuItem("Save",new ImageIcon("Icon/Save.png"));
+
+		newMenuSave = new JMenuItem("Save", new ImageIcon("Icon/Save.png"));
 		newMenuSave.setFont(new Font("sans-serif", Font.PLAIN, 20));
 		fileMenu.add(newMenuSave);
 		newMenuSave.addActionListener(this);
-		
-		newMenuExit = new JMenuItem("Exit",new ImageIcon("Icon/Exit.png"));
+
+		newMenuExit = new JMenuItem("Exit", new ImageIcon("Icon/Exit.png"));
 		newMenuExit.setFont(new Font("sans-serif", Font.PLAIN, 20));
 		fileMenu.add(newMenuExit);
 		newMenuExit.addActionListener(this);
-		//files inside the menu bar(About ->...) 
-		newMenuAbout = new JMenuItem("About",new ImageIcon("Icon/Help.png"));
+		// files inside the menu bar(About ->...)
+		newMenuAbout = new JMenuItem("About", new ImageIcon("Icon/Help.png"));
 		newMenuAbout.setFont(new Font("sans-serif", Font.PLAIN, 20));
 		fileHelp.add(newMenuAbout);
 		newMenuAbout.addActionListener(this);
-		
-		
-		///this is a panel in the north
-		//create table panel
+
+		/// this is a panel in the north
+		// create table panel
 		JPanel tablePanel = new JPanel();
-		tablePanel.setPreferredSize(new Dimension(1200,200));
-		
-		//this is a panel which have some components and a table shows header of data.
-		//create a header JPanel in tablePanel
+		tablePanel.setPreferredSize(new Dimension(1200, 200));
+
+		// this is a panel which have some components and a table shows header of data.
+		// create a header JPanel in tablePanel
 		JPanel headerPanel = new JPanel();
-		headerPanel.setPreferredSize(new Dimension(1200,60));
+		headerPanel.setPreferredSize(new Dimension(1200, 60));
 		headerPanel.setBackground(Color.getHSBColor(0.0f, 0.0f, 93.33f));
 		tablePanel.add(headerPanel);
-		
-		//Create a ComboBox to display two type data by MPH and KM/H
-		String []speedItem=new String[] {"MILES","KILOMETERS"};
-		cb=new JComboBox<String>(speedItem);
+
+		// Create a ComboBox to display two type data by MPH and KM/H
+		String[] speedItem = new String[] { "MILES", "KILOMETERS" };
+		cb = new JComboBox<String>(speedItem);
 		cb.setSelectedIndex(1);
-		cb.setPreferredSize(new Dimension(150,50));
+		cb.setPreferredSize(new Dimension(150, 50));
 		cb.addActionListener(new ActionListener() {
 			/*
-			 * when combobox select then display data by the text of selected.
-			 * (non-Javadoc)
-			 * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
+			 * when combobox select then display data by the text of selected. (non-Javadoc)
+			 * 
+			 * @see
+			 * java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
 			 */
 			public void actionPerformed(ActionEvent event) {
 				@SuppressWarnings("unchecked")
-				JComboBox<String> cb=(JComboBox<String>)(event.getSource());
-				String s=(String)cb.getSelectedItem();
-				//empty the table
+				JComboBox<String> cb = (JComboBox<String>) (event.getSource());
+				String s = (String) cb.getSelectedItem();
+				// empty the table
 				resetBodyTable();
 				resetSummaryTable();
-				Polar polar=new Polar();
-				//identify speed is KM/H or MPH
-				if(s.equals("KILOMETERS")) {
+				Polar polar = new Polar();
+				// identify speed is KM/H or MPH
+				if (s.equals("KILOMETERS")) {
 					polar.setSpeed(true);
-				}else {
+				} else {
 					polar.setSpeed(false);
 				}
 				data.tableData(polar.isSpeed());
@@ -148,205 +173,405 @@ public class Polar extends JFrame implements ActionListener {
 			}
 		});
 		headerPanel.add(cb);
-		
-		
-		//create summary Panel in the table panel
-		//create summary Panel
-		JPanel summaryPane=new JPanel();
-		summaryPane.setPreferredSize(new Dimension(1200,100));
+
+		// create summary Panel in the table panel
+		// create summary Panel
+		JPanel summaryPane = new JPanel();
+		summaryPane.setPreferredSize(new Dimension(1200, 200));
+		summaryPane.setBackground(Color.getHSBColor(0.0f, 0.0f, 93.33f));
 		tablePanel.add(summaryPane);
-		
-		//create a JLabel in summaryPanel
-		JLabel summary=new JLabel("Summary",SwingConstants.CENTER);
-		summary.setFont (summary.getFont ().deriveFont (28.0f));
-		summary.setMaximumSize(new Dimension(1200,50));
-		summary.setPreferredSize(new Dimension(1200,50));
-		summary.setMinimumSize(new Dimension(1200,50));
-		summaryPane.add(summary,BorderLayout.NORTH);
-		
-		//create summary table
+
+		// create a JLabel in summaryPanel
+		JLabel summary = new JLabel("Summary", SwingConstants.CENTER);
+		summary.setFont(summary.getFont().deriveFont(24.0f));
+		summary.setMaximumSize(new Dimension(1200, 40));
+		summary.setPreferredSize(new Dimension(1200, 40));
+		summary.setMinimumSize(new Dimension(1200, 40));
+		summaryPane.add(summary, BorderLayout.NORTH);
+
+		// create summary table
 		summaryTable.setRowHeight(30);
 		summaryTable.setBackground(Color.YELLOW);
 		summaryTable.setPreferredScrollableViewportSize(summaryTable.getPreferredSize());
-		JScrollPane scrollPane3=new JScrollPane(summaryTable);
-		scrollPane3.setPreferredSize(new Dimension(1200,50));
-		summaryPane.add(scrollPane3,BorderLayout.SOUTH);
-		
-		//date table
+		JScrollPane scrollPane3 = new JScrollPane(summaryTable);
+		scrollPane3.setPreferredSize(new Dimension(1100, 50));
+		summaryPane.add(scrollPane3, BorderLayout.SOUTH);
+
+		JPanel extraPanel = new JPanel();
+		summaryPane.add(extraPanel, BorderLayout.SOUTH);
+		if (getData().existPowerBalance()) {
+			extraPanel.add(new JLabel("PI:"));
+			extraPanel.add(new JLabel(getData().getPowerBalance().get("PI").toString()));
+			extraPanel.add(new JLabel("         "));
+
+			extraPanel.add(new JLabel("Power Balance(LPB/RPB):"));
+			extraPanel.add(new JLabel(getData().getPowerBalance().get("LPB").toString() + " / "
+					+ getData().getPowerBalance().get("RPB").toString()));
+			extraPanel.add(new JLabel("         "));
+		}
+		extraPanel.add(new JLabel("NP:"));
+		extraPanel.add(new JLabel(Integer.toString(getData().getNP())));
+		extraPanel.add(new JLabel("         "));
+
+		extraPanel.add(new JLabel("IF:"));
+		extraPanel.add(new JLabel(twoDecimal.format(getData().getIF())));
+		extraPanel.add(new JLabel("         "));
+
+		extraPanel.add(new JLabel("TSS:"));
+		extraPanel.add(new JLabel(Integer.toString(getData().getTSS())));
+
+		// date table
 		table.setRowHeight(30);
 		table.setBackground(Color.YELLOW);
 		table.setPreferredScrollableViewportSize(table.getPreferredSize());
-		JScrollPane scrollPane=new JScrollPane(table);
-		scrollPane.setPreferredSize(new Dimension(250,50));
-		headerPanel.add(scrollPane,BorderLayout.WEST);
-		
-		///this is a panel in south
-		//create bodyPanel
-		JPanel bodyPanel=new JPanel();
+		JScrollPane scrollPane = new JScrollPane(table);
+		scrollPane.setPreferredSize(new Dimension(250, 50));
+		headerPanel.add(scrollPane, BorderLayout.WEST);
+
+		/// this is a panel in south
+		// create bodyPanel
+		JPanel bodyPanel = new JPanel();
 		bodyPanel.setBackground(Color.getHSBColor(0.0f, 0.0f, 93.33f));
-		
-		//create dataTable in body Panel
+
+		// create dataTable in body Panel
 		dataTable.setRowHeight(30);
 		dataTable.setPreferredScrollableViewportSize(dataTable.getPreferredSize());
 		dataTable.setBackground(Color.GRAY);
-		JScrollPane scrollPane1=new JScrollPane(dataTable);
-		scrollPane1.setPreferredSize(new Dimension(1200,580));
+		JScrollPane scrollPane1 = new JScrollPane(dataTable);
+		scrollPane1.setPreferredSize(new Dimension(1200, 580));
 
-		
-		//create a panel display SMode
-		JPanel smodePanel=new JPanel();
-		smodePanel.setPreferredSize(new Dimension(1200,30));
-		smodePanel.setBackground(Color.WHITE);;
-		
+		// create a panel display SMode
+		JPanel smodePanel = new JPanel();
+		smodePanel.setPreferredSize(new Dimension(1200, 30));
+		smodePanel.setBackground(Color.WHITE);
+		;
+
 		smodePanel.add(new JLabel("Speed:"));
 		smodePanel.add(new JLabel(getData().getSMODE().get("Speed")));
 		smodePanel.add(new JLabel(" "));
-		
+
 		smodePanel.add(new JLabel("Cadence:"));
 		smodePanel.add(new JLabel(getData().getSMODE().get("Cadence")));
 		smodePanel.add(new JLabel(" "));
-		
+
 		smodePanel.add(new JLabel("Altitude:"));
 		smodePanel.add(new JLabel(getData().getSMODE().get("Altitude")));
 		smodePanel.add(new JLabel(" "));
-		
+
 		smodePanel.add(new JLabel("Power:"));
 		smodePanel.add(new JLabel(getData().getSMODE().get("Power")));
 		smodePanel.add(new JLabel(" "));
-		
+
 		smodePanel.add(new JLabel("Power Left Right Balance:"));
 		smodePanel.add(new JLabel(getData().getSMODE().get("Power Left Right Balance")));
 		smodePanel.add(new JLabel(" "));
-		
+
 		smodePanel.add(new JLabel("Power Pedalling Index:"));
 		smodePanel.add(new JLabel(getData().getSMODE().get("Power Pedalling Index")));
 		smodePanel.add(new JLabel(" "));
-		
+
 		smodePanel.add(new JLabel("HR/CC data:"));
 		smodePanel.add(new JLabel(getData().getSMODE().get("HR/CC data")));
 		smodePanel.add(new JLabel(" "));
-		
+
 		smodePanel.add(new JLabel("US/Euro unit:"));
 		smodePanel.add(new JLabel(getData().getSMODE().get("US/Euro unit")));
-		
-		//panel in tabbedPane
-		JPanel dataPanel=new JPanel();
-		dataPanel.add(smodePanel,BorderLayout.NORTH);
-		dataPanel.add(scrollPane1,BorderLayout.SOUTH);
-		
-		//create a tab Panel to display data and chart
-		tabbedPane.setPreferredSize(new Dimension(1200,550));
+
+		// panel in tabbedPane
+		JPanel dataPanel = new JPanel();
+		dataPanel.add(smodePanel, BorderLayout.NORTH);
+		dataPanel.add(scrollPane1, BorderLayout.SOUTH);
+
+		// create a tab Panel to display data and chart
+		tabbedPane.setPreferredSize(new Dimension(1600, 600));
 		tabbedPane.addTab("Data", dataPanel);
 		tabbedPane.setMnemonicAt(0, KeyEvent.VK_1);
 		bodyPanel.add(tabbedPane);
-        
-		//Display frame in the center of window
-		contain.add(tablePanel,BorderLayout.NORTH);
-		contain.add(bodyPanel,BorderLayout.SOUTH);
 		
+		chartPanel=new ChartPanel(chart());
+		chartPanel.addChartMouseListener(this);
+		tabbedPane.addTab("Chart",chartPanel);
+		// Display frame in the center of window
+		contain.add(tablePanel, BorderLayout.NORTH);
+		contain.add(bodyPanel, BorderLayout.SOUTH);
+
 		frame.pack();
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setLocationRelativeTo(null);
 		frame.setJMenuBar(menuBar);
-		frame.setSize(1200,800);
-		frame.setVisible(true);	
+		frame.setSize(1600, 1200);
+		frame.setVisible(true);
 	}
-	  
-	public void actionPerformed (ActionEvent e){
+
+	public void actionPerformed(ActionEvent e) {
 		JMenuItem source = (JMenuItem) (e.getSource());
 		// When click "Save"
-		if (source.getText().equals("Save")){
-			fd = new FileDialog(frame,"Save",FileDialog.SAVE);
-		    fd.setVisible(true); 
-					
+		if (source.getText().equals("Save")) {
+			fd = new FileDialog(frame, "Save", FileDialog.SAVE);
+			fd.setVisible(true);
+
 		}
 
 		// When click "Load"
-		else if (source.getText().equals("Load")){
+		else if (source.getText().equals("Load")) {
 			resetBodyTable();
 			resetSummaryTable();
 			data.model.setRowCount(0);
-			fd = new FileDialog(frame,"Open",FileDialog.LOAD);
-            fd.setVisible(true);   //create and display FileDialog.
-            try {   
-            	if ((fd.getDirectory()!=null) && (fd.getFile()!=null)){
-            	//get the path and file name.
-            	file = new File(fd.getDirectory(),fd.getFile());
-                FileReader fr = new FileReader(file);
-                BufferedReader br = new BufferedReader(fr);
-                Data data=new Data();
-                String aline;
-                int i=1;
-                //load file data to TextArea
-                while ((aline=br.readLine()) != null){
-                	//collect date to HashMap
-                	data.allMap.put(i,aline);
-                	//collect header information
-                	Pattern p=Pattern.compile(REGEX);
-                	Matcher m=p.matcher(aline);
-                	if(m.find()) {
-                		//record the line number of each line.
-                		data.headerMap.put(m.group(1),i);
-                	}
-                	i++;
-                }
-                fr.close();
-                br.close();
-                Polar polar=new Polar();
-                this.frame.setVisible(false);
-              //add data to table and display then hide this frame.
-                data.tableData();
-                polar.dataTable.setModel(data.dataModel);
-                polar.summaryTable.setModel(data.summaryModel);
-                polar.table.setModel(data.model);
-                polar.setData(data);
-                frame.setVisible(false);
-                //add a new tab into tabbedPanel of Polar
-				ChartPanel chartPanel=new ChartPanel(data.chart());
-				polar.setChartPanel(chartPanel);
-				polar.GUI();
-				polar.tabbedPane.addTab("Chart", polar.getChartPanel());
-            	}
-                
-              }
-            catch (IOException ioe){
-                
-                System.out.println(ioe);
-              }	
-	
-			
-		}else if(source.getText().equals("Exit")) {
-			//exit application
+			fd = new FileDialog(frame, "Open", FileDialog.LOAD);
+			fd.setVisible(true); // create and display FileDialog.
+			try {
+				if ((fd.getDirectory() != null) && (fd.getFile() != null)) {
+					// get the path and file name.
+					file = new File(fd.getDirectory(), fd.getFile());
+					FileReader fr = new FileReader(file);
+					BufferedReader br = new BufferedReader(fr);
+					Data data = new Data();
+					String aline;
+					int i = 1;
+					// load file data to TextArea
+					while ((aline = br.readLine()) != null) {
+						// collect date to HashMap
+						data.allMap.put(i, aline);
+						// collect header information
+						Pattern p = Pattern.compile(REGEX);
+						Matcher m = p.matcher(aline);
+						if (m.find()) {
+							// record the line number of each line.
+							data.headerMap.put(m.group(1), i);
+						}
+						i++;
+					}
+					fr.close();
+					br.close();
+					Polar polar = new Polar();
+					this.frame.setVisible(false);
+					// add data to table and display then hide this frame.
+					data.tableData();
+					polar.dataTable.setModel(data.dataModel);
+					polar.summaryTable.setModel(data.summaryModel);
+					polar.table.setModel(data.model);
+					polar.setData(data);
+					frame.setVisible(false);
+
+					polar.GUI();
+
+				}
+
+			} catch (IOException ioe) {
+
+				System.out.println(ioe);
+			}
+
+		} else if (source.getText().equals("Exit")) {
+			// exit application
 			System.exit(-1);
-		}else if(source.getText().equals("About")) {
-			//show a messagebox.
-			JOptionPane.showMessageDialog(newMenuAbout, "Welcome to Polar!"+"\n"+"                        :)");
+		} else if (source.getText().equals("About")) {
+			// show a messagebox.
+			JOptionPane.showMessageDialog(newMenuAbout, "Welcome to Polar!" + "\n" + "                        :)");
 		}
 	}
-	public ChartPanel getChartPanel() {
-		return chartPanel;
-	}
-	public void setChartPanel(ChartPanel chartPanel) {
-		this.chartPanel = chartPanel;
-	}
+	 /**
+     * Receives chart mouse click events.
+     *
+     * @param event  the event.
+     */
+	@Override
+    public void chartMouseClicked(ChartMouseEvent event) {
+		ChartEntity chartentity = event.getEntity();
+		if (chartentity != null) {
+			System.out.println("Mouse clicked: " + chartentity.toString());
+		} else
+			System.out.println("Mouse clicked: null entity.");
+	
+
+        int mouseX = event.getTrigger().getX();
+        int mouseY = event.getTrigger().getY();
+        System.out.println("x = " + mouseX + ", y = " + mouseY);
+        
+    }
+
+
 	void resetBodyTable() {
-		 data.dataModel.setRowCount(0);
+		data.dataModel.setRowCount(0);
 	}
+
 	void resetSummaryTable() {
-		 data.summaryModel.setRowCount(0);
+		data.summaryModel.setRowCount(0);
 	}
+
 	void resetTable() {
-		 data.model.setRowCount(0);
+		data.model.setRowCount(0);
 	}
+
 	public boolean isSpeed() {
 		return speed;
 	}
+
 	public void setSpeed(boolean speed) {
 		this.speed = speed;
 	}
-	public static void main(String [] args) {
-		Polar polar=new Polar();
+
+	public static void main(String[] args) {
+		Polar polar = new Polar();
 		polar.GUI();
 	}
-}
+	/**
+	 * add data to Chart
+	 * 
+	 * @param speed
+	 * @return
+	 */
+	private XYDataset createDataset(String strings) {
 
+		// Initialize
+
+		TimeSeriesCollection tsc = new TimeSeriesCollection();
+
+		tsc.addSeries(getData().getChartData().get(strings));
+		XYDataset dataset = tsc;
+
+		return dataset;
+	}
+	/**
+	 * a whole chart to be returned
+	 * 
+	 * @param speed
+	 * @return
+	 */
+	public JFreeChart chart() {
+		XYDataset dataset = createDataset("Speed");
+
+		// Create chart
+		JFreeChart chart = ChartFactory.createTimeSeriesChart("Polar", // Chart title
+				"Time", // X-Axis Label
+				"", // Y-Axis Label
+				dataset, true, false, false);
+		// Assign it to the chart
+		XYPlot plot = (XYPlot) chart.getPlot();
+		//X-axis1
+		DateAxis rangeAxis1 = new DateAxis("Times");
+		rangeAxis1.setTickUnit(new DateTickUnit(DateTickUnitType.MINUTE, 5));
+		rangeAxis1.setDateFormatOverride(new SimpleDateFormat("HH:mm:ss"));
+		rangeAxis1.setLowerMargin(0.0001);
+		rangeAxis1.setUpperMargin(0.0001);
+		plot.setDomainAxis(0,rangeAxis1);
+		//X-axis2
+		NumberAxis rangeAxis2 = new NumberAxis("");
+		rangeAxis2.setRange(0,getData().getTime());
+		rangeAxis2.setTickUnit(new NumberTickUnit(300));
+		rangeAxis2.setVisible(false);
+		plot.setDomainAxis(1, rangeAxis2);
+		
+		
+		
+		// Y-axis1
+		XYDataset dataset1 = createDataset("Speed");
+		NumberAxis axis1 = new NumberAxis("");
+		XYLineAndShapeRenderer r1 = new XYLineAndShapeRenderer();
+		r1.setSeriesPaint(0, new Color(134, 179, 51));
+		r1.setSeriesShapesVisible(0, false);
+		axis1.setAutoRangeIncludesZero(false);
+		axis1.setLabelPaint(new Color(134, 179, 51));
+		axis1.setTickLabelPaint(new Color(134, 179, 51));
+		axis1.setRange(0, 33);
+		axis1.setTickUnit(new NumberTickUnit(11));
+		plot.setRangeAxis(0, axis1);
+		plot.mapDatasetToRangeAxis(3, 1);
+		plot.setRangeAxisLocation(0, org.jfree.chart.axis.AxisLocation.BOTTOM_OR_LEFT);
+		plot.setDataset(0, dataset1);
+		plot.mapDatasetToRangeAxis(0, 0);
+		plot.setRenderer(0, r1);
+		// Y-axis2
+		XYDataset dataset2 = createDataset("Cadence");
+		NumberAxis axis2 = new NumberAxis("");
+		XYLineAndShapeRenderer r2 = new XYLineAndShapeRenderer();
+		r2.setSeriesPaint(0, Color.ORANGE);
+		r2.setSeriesShapesVisible(0, false);
+		axis2.setAutoRangeIncludesZero(false);
+		axis2.setLabelPaint(Color.ORANGE);
+		axis2.setTickLabelPaint(Color.ORANGE);
+		axis2.setRange(0, 125);
+		axis2.setTickUnit(new NumberTickUnit(25));
+		plot.setRangeAxis(1, axis2);
+		plot.setRangeAxisLocation(1, org.jfree.chart.axis.AxisLocation.BOTTOM_OR_LEFT);
+		plot.setDataset(1, dataset2);
+		plot.mapDatasetToRangeAxis(1, 1);
+		plot.setRenderer(1, r2);
+		//Y-axis3
+		XYDataset dataset3 = createDataset("Altitude");
+		NumberAxis axis3 = new NumberAxis("");
+		XYLineAndShapeRenderer r3 = new XYLineAndShapeRenderer();
+		r3.setSeriesPaint(0, Color.BLACK);
+		r3.setSeriesShapesVisible(0, false);
+		axis3.setAutoRangeIncludesZero(false);
+		axis3.setLabelPaint(Color.BLACK);
+		axis3.setTickLabelPaint(Color.BLACK);
+		axis3.setRange(307, 314);
+		axis3.setTickUnit(new NumberTickUnit(1));
+		plot.setRangeAxis(2, axis3);
+		plot.setRangeAxisLocation(2, org.jfree.chart.axis.AxisLocation.BOTTOM_OR_LEFT);
+		plot.setDataset(2, dataset3);
+		plot.mapDatasetToRangeAxis(2, 2);
+		plot.setRenderer(2, r3);
+		// Y-axis4
+		XYDataset dataset4 = createDataset("Heart");
+		NumberAxis axis4 = new NumberAxis("");
+		XYLineAndShapeRenderer r4 = new XYLineAndShapeRenderer();
+		r4.setSeriesPaint(0, new Color(254, 67, 101));
+		r4.setSeriesShapesVisible(0, false);
+		axis4.setAutoRangeIncludesZero(false);
+		axis4.setLabelPaint(new Color(254, 67, 101));
+		axis4.setTickLabelPaint(new Color(254, 67, 101));
+		axis4.setRange(0, 200);
+		axis4.setTickUnit(new NumberTickUnit(50));
+		plot.setRangeAxis(3, axis4);
+		plot.setRangeAxisLocation(3, org.jfree.chart.axis.AxisLocation.BOTTOM_OR_RIGHT);
+		plot.setDataset(3, dataset4);
+		plot.mapDatasetToRangeAxis(3, 3);
+		plot.setRenderer(3, r4);
+		// Y-axis5
+		XYDataset dataset5 = createDataset("Power");
+		XYLineAndShapeRenderer r5 = new XYLineAndShapeRenderer();
+		r5.setSeriesPaint(0, new Color(164, 34, 168));
+		r5.setSeriesShapesVisible(0, false);
+		NumberAxis axis5 = new NumberAxis("");
+		axis5.setAutoRangeIncludesZero(false);
+		axis5.setLabelPaint(new Color(164, 34, 168));
+		axis5.setTickLabelPaint(new Color(164, 34, 168));
+		axis5.setRange(0, 650);
+		axis5.setTickUnit(new NumberTickUnit(100));
+		plot.setRangeAxis(4, axis5);
+		plot.setRangeAxisLocation(4, org.jfree.chart.axis.AxisLocation.BOTTOM_OR_RIGHT);
+		plot.setDataset(4, dataset5);
+		plot.mapDatasetToRangeAxis(4, 4);
+		plot.setRenderer(4, r5);
+		return chart;
+	}
+
+	
+	
+	
+	@Override
+	public void chartMouseMoved(ChartMouseEvent event) {
+
+	        int mouseX = event.getTrigger().getX();
+	        int mouseY = event.getTrigger().getY();
+	        Point2D p = this.chartPanel.translateScreenToJava2D(
+	                new Point(mouseX, mouseY));
+	        
+	        
+	        XYPlot plot = (XYPlot) this.chart().getPlot();
+	        ChartRenderingInfo info = this.chartPanel.getChartRenderingInfo();
+	        Rectangle2D dataArea = info.getPlotInfo().getDataArea();
+	        //
+	        ValueAxis domainAxis = plot.getDomainAxis(1);
+	        RectangleEdge domainAxisEdge = plot.getDomainAxisEdge();
+	        ValueAxis rangeAxis =  plot.getRangeAxis();
+	        RectangleEdge rangeAxisEdge = plot.getRangeAxisEdge();
+	        double chartX = domainAxis.java2DToValue(p.getX(), dataArea,
+	                domainAxisEdge);
+	        double chartY = rangeAxis.java2DToValue(p.getY(), dataArea,
+	                rangeAxisEdge);
+	        
+	}
+}
