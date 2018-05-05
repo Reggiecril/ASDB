@@ -22,6 +22,8 @@ import java.awt.TextArea;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.HashMap;
@@ -78,6 +80,11 @@ public class Polar extends JFrame implements ActionListener,ChartMouseListener {
 	DecimalFormat oneDecimal = new DecimalFormat("0.0");
 	DecimalFormat twoDecimal = new DecimalFormat("0.00");
 	private ChartPanel chartPanel;
+	 double px = 0.0, py = 0.0, prx = 0.0, pry = 0.0, chartpx = 0.0, chartpy = 0.0, 
+	            chartX = 0.0, chartY = 0.0;
+	private Point pointPress,pointRelease;
+	
+	
 	Polar() {
 	}
 
@@ -290,6 +297,7 @@ public class Polar extends JFrame implements ActionListener,ChartMouseListener {
 		
 		chartPanel=new ChartPanel(chart());
 		chartPanel.addChartMouseListener(this);
+		chartPanel.addMouseListener(new CustomListener());
 		tabbedPane.addTab("Chart",chartPanel);
 		// Display frame in the center of window
 		contain.add(tablePanel, BorderLayout.NORTH);
@@ -370,25 +378,6 @@ public class Polar extends JFrame implements ActionListener,ChartMouseListener {
 			JOptionPane.showMessageDialog(newMenuAbout, "Welcome to Polar!" + "\n" + "                        :)");
 		}
 	}
-	 /**
-     * Receives chart mouse click events.
-     *
-     * @param event  the event.
-     */
-	@Override
-    public void chartMouseClicked(ChartMouseEvent event) {
-		ChartEntity chartentity = event.getEntity();
-		if (chartentity != null) {
-			System.out.println("Mouse clicked: " + chartentity.toString());
-		} else
-			System.out.println("Mouse clicked: null entity.");
-	
-
-        int mouseX = event.getTrigger().getX();
-        int mouseY = event.getTrigger().getY();
-        System.out.println("x = " + mouseX + ", y = " + mouseY);
-        
-    }
 
 
 	void resetBodyTable() {
@@ -445,7 +434,7 @@ public class Polar extends JFrame implements ActionListener,ChartMouseListener {
 		JFreeChart chart = ChartFactory.createTimeSeriesChart("Polar", // Chart title
 				"Time", // X-Axis Label
 				"", // Y-Axis Label
-				dataset, true, false, false);
+				dataset, true, true, false);
 		// Assign it to the chart
 		XYPlot plot = (XYPlot) chart.getPlot();
 		//X-axis1
@@ -550,28 +539,81 @@ public class Polar extends JFrame implements ActionListener,ChartMouseListener {
 
 	
 	
-	
+	 /**
+     * Receives chart mouse click events.
+     *
+     * @param event  the event.
+     */
+	@Override
+    public void chartMouseClicked(ChartMouseEvent event) {
+
+        int mouseX = event.getTrigger().getX();
+        Point2D p = this.chartPanel.translateScreenToJava2D(
+                new Point(mouseX,0));
+        
+        XYPlot plot = (XYPlot) this.chart().getPlot();
+        ChartRenderingInfo info = this.chartPanel.getChartRenderingInfo();
+        Rectangle2D dataArea = info.getPlotInfo().getDataArea();
+        //
+        ValueAxis domainAxis = plot.getDomainAxis(1);
+        RectangleEdge domainAxisEdge = plot.getDomainAxisEdge();
+        chartX = domainAxis.java2DToValue(p.getX(), dataArea,
+                domainAxisEdge);
+        System.out.println(" " + chartX);
+        
+    }
 	@Override
 	public void chartMouseMoved(ChartMouseEvent event) {
 
-	        int mouseX = event.getTrigger().getX();
-	        int mouseY = event.getTrigger().getY();
-	        Point2D p = this.chartPanel.translateScreenToJava2D(
-	                new Point(mouseX, mouseY));
+		   int mouseX = event.getTrigger().getX();
+		    int mouseY = event.getTrigger().getY();
+		   pointPress=new Point(mouseX,mouseY);
 	        
-	        
-	        XYPlot plot = (XYPlot) this.chart().getPlot();
-	        ChartRenderingInfo info = this.chartPanel.getChartRenderingInfo();
-	        Rectangle2D dataArea = info.getPlotInfo().getDataArea();
-	        //
-	        ValueAxis domainAxis = plot.getDomainAxis(1);
-	        RectangleEdge domainAxisEdge = plot.getDomainAxisEdge();
-	        ValueAxis rangeAxis =  plot.getRangeAxis();
-	        RectangleEdge rangeAxisEdge = plot.getRangeAxisEdge();
-	        double chartX = domainAxis.java2DToValue(p.getX(), dataArea,
-	                domainAxisEdge);
-	        double chartY = rangeAxis.java2DToValue(p.getY(), dataArea,
-	                rangeAxisEdge);
 	        
 	}
+
+	public class CustomListener implements MouseListener {
+
+        public void mouseClicked(MouseEvent e) {
+        
+        }
+
+        public void mouseEntered(MouseEvent e) {
+      	  
+        }
+
+        public void mouseExited(MouseEvent e) {
+      	  
+        }
+
+        public void mousePressed(MouseEvent e) {
+        	px = e.getX();
+            py = e.getY();
+        }
+
+        public void mouseReleased(MouseEvent e) {
+        	getMouse(pointPress);
+            System.out.println("Mouse Released! xpos = " + chartX + "; py = " + chartY);
+            //calculate pointRelease
+        	int x=0,y=0;
+        	prx = e.getX();
+            pry = e.getY();
+            x=(int) (pointPress.getX()+(prx-px));
+            y=(int) (pointPress.getY()+(pry-py));
+            pointRelease=new Point(x,y);
+            getMouse(pointRelease);
+            System.out.println("Mouse Released! xpos = " + chartX + "; py = " + chartY);
+        }
+    	public void getMouse(Point po) {
+    			Point2D p = chartPanel.translateScreenToJava2D(po);	
+    	        
+    	        XYPlot plot = (XYPlot) chart().getPlot();
+    	        ChartRenderingInfo info = chartPanel.getChartRenderingInfo();
+    	        Rectangle2D dataArea = info.getPlotInfo().getDataArea();
+    	        //
+    	        ValueAxis domainAxis = plot.getDomainAxis(1);
+    	        RectangleEdge domainAxisEdge = plot.getDomainAxisEdge();
+    	        chartX = domainAxis.java2DToValue(p.getX(), dataArea,domainAxisEdge);
+    	}
+   }
 }
