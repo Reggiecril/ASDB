@@ -75,6 +75,7 @@ public class Polar extends JFrame implements ActionListener, ChartMouseListener 
 	JTable summaryTable = new JTable();
 	JTable chunkTable = new JTable();
 	JPanel chunkPane = new JPanel();
+	JTextField text = new JTextField(5);
 	private static String REGEX = "\\[(.*?)\\]";
 	Data data;
 	private boolean speed;
@@ -139,7 +140,7 @@ public class Polar extends JFrame implements ActionListener, ChartMouseListener 
 		/// this is a panel in the north
 		// create table panel
 		JPanel tablePanel = new JPanel();
-		tablePanel.setPreferredSize(new Dimension(1600, 200));
+		tablePanel.setPreferredSize(new Dimension(1600, 380));
 
 		// this is a panel which have some components and a table shows header of data.
 		// create a header JPanel in tablePanel
@@ -200,7 +201,7 @@ public class Polar extends JFrame implements ActionListener, ChartMouseListener 
 		headerPanel.add(new JLabel("Chunk:"));
 		headerPanel.add(new JLabel(" "));
 		// create text
-		JTextField text = new JTextField(5);
+		
 		text.setPreferredSize(new Dimension(100, 30));
 		headerPanel.add(text);
 		// create button
@@ -210,8 +211,21 @@ public class Polar extends JFrame implements ActionListener, ChartMouseListener 
 
 		    @Override
 		    public void actionPerformed(ActionEvent e) {
-		       System.out.println(startPoint+"  "+endPoint);
-		       Polar polar=new Polar();
+		    	resetChunkTable();
+		       System.out.println("startPoint"+startPoint+"  "+"endPoint"+endPoint);
+		       int index=Integer.valueOf(text.getText().toString());
+		       int[]point=getChunkData(startPoint, endPoint,index);
+		       
+		       for(int i=0;i<point.length;i++) {
+		    	   if(i==0)
+		    		   data.chunkData(startPoint,point[0]);
+		    	   else
+		    		   data.chunkData(point[i-1],point[i]);
+		    	   
+		       }
+		       
+				
+				chunkTable.setModel(data.chunkModel);
 		       chunkPane.setVisible(true);
 		    }});
 		
@@ -243,7 +257,7 @@ public class Polar extends JFrame implements ActionListener, ChartMouseListener 
 		// create chunk Panel in the table panel
 		// create chunk Panel
 		
-		chunkPane.setPreferredSize(new Dimension(1600, 400));
+		chunkPane.setPreferredSize(new Dimension(1600, 200));
 		chunkPane.setBackground(Color.getHSBColor(0.0f, 0.0f, 93.33f));
 		chunkPane.setVisible(false);
 		tablePanel.add(chunkPane);
@@ -261,7 +275,7 @@ public class Polar extends JFrame implements ActionListener, ChartMouseListener 
 		chunkTable.setBackground(Color.YELLOW);
 		chunkTable.setPreferredScrollableViewportSize(chunkTable.getPreferredSize());
 		JScrollPane scrollPane4 = new JScrollPane(chunkTable);
-		scrollPane4.setPreferredSize(new Dimension(1600, 350));
+		scrollPane4.setPreferredSize(new Dimension(1600, 180));
 		chunkPane.add(scrollPane4, BorderLayout.SOUTH);
 		
 		
@@ -427,6 +441,9 @@ public class Polar extends JFrame implements ActionListener, ChartMouseListener 
 		data.model.setRowCount(0);
 	}
 
+	void resetChunkTable() {
+		data.chunkModel.setRowCount(0);
+	}
 	public boolean isSpeed() {
 		return speed;
 	}
@@ -434,9 +451,28 @@ public class Polar extends JFrame implements ActionListener, ChartMouseListener 
 	public void setSpeed(boolean speed) {
 		this.speed = speed;
 	}
-	public void getChunkData(int mouseX,int mouseY,int index) {
-		int different=mouseY-mouseX;
+	public int[] getChunkData(int startPoint,int endPoint,int index) {
+		int different=endPoint-startPoint+1;
 		int extra=different%index;
+		int average=(different-extra)/index;
+		int []eachPoint=new int[index];
+		for(int i=0;i<index;i++) {
+			if (extra == 0) {
+				if (i == 0) {
+					eachPoint[i] = startPoint + average - 1;
+				} else {
+					eachPoint[i] = eachPoint[i - 1] + average;
+				}
+			} else {
+				if (i == 0) {
+					eachPoint[i] = startPoint + average;
+				} else {
+					eachPoint[i]=eachPoint[i-1]+average+1;
+				}
+				extra--;
+			}
+		}
+		return eachPoint;
 	}
 
 	public static void main(String[] args) {
@@ -617,8 +653,6 @@ public class Polar extends JFrame implements ActionListener, ChartMouseListener 
 
 		public void mouseReleased(MouseEvent e) {
 
-			
-		
 			int x = 0, y = 0;
 			prx = e.getX();
 			pry = e.getY();
@@ -629,6 +663,7 @@ public class Polar extends JFrame implements ActionListener, ChartMouseListener 
 			} else if (prx - px == 0) {
 				
 			} else {
+				resetSummaryTable();
 				x = (int) (pointPress.getX() + (prx - px));
 				y = (int) (pointPress.getY() + (pry - py));
 				getMouse(pointPress);

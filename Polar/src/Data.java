@@ -345,11 +345,13 @@ public class Data {
 		int maxPower = 0;
 		int sumAltitude = 0;
 		int maxAltitude = 0;
+		
 		double[] speedData = getHRData(number1, number2).get("Speed");
 		double[] heartData = getHRData(number1, number2).get("Heart");
 		double[] powerData = getHRData(number1, number2).get("Power");
 		double[] altitudeData = getHRData(number1, number2).get("Altitude");
 		int length = speedData.length;
+		
 		// loop to calculate
 		for (int i = 0; i < length; i++) {
 
@@ -442,26 +444,27 @@ public class Data {
 	 * @param speed
 	 */
 	public void chunkData(int number1, int number2) {
+		
 		// summary body data
 		if (existPowerBalance()) {
-			String[] columns1 = { "Total distance covered", "Average speed(KM/H)", "Maximum speed(KM/H)",
+			String[] columns1 = { "Distance covered", "Average speed(KM/H)", "Maximum speed(KM/H)",
 					"Average heart rate", "Maximum heart rate", "Minimum heart rate", "Average power",
 					"Maximum power", "Average altitude", "Maximum altitude", "PI", "Power Balance(LPB/RPB)", "NP",
 					"IF", "TSS" };
-			summaryModel.setColumnIdentifiers(columns1);
+			chunkModel.setColumnIdentifiers(columns1);
 		} else {
-			String[] columns1 = { "Total distance covered", "Average speed(KM/H)", "Maximum speed(KM/H)",
+			String[] columns1 = { "Distance covered", "Average speed(KM/H)", "Maximum speed(KM/H)",
 					"Average heart rate", "Maximum heart rate", "Minimum heart rate", "Average power",
 					"Maximum power", "Average altitude", "Maximum altitude", "NP", "IF", "TSS" };
-			summaryModel.setColumnIdentifiers(columns1);
+			chunkModel.setColumnIdentifiers(columns1);
 		}
 
 		// Initialize
-		Object[] dataRow;
+		Object[] chunkRow;
 		if (existPowerBalance())
-			dataRow = new Object[15];
+			chunkRow = new Object[15];
 		else
-			dataRow = new Object[13];
+			chunkRow = new Object[13];
 		int sumHeart = 0;
 		int sumPower = 0;
 		int sumSpeed = 0;
@@ -471,11 +474,36 @@ public class Data {
 		int maxPower = 0;
 		int sumAltitude = 0;
 		int maxAltitude = 0;
-		double[] speedData = getHRData(number1, number2).get("Speed");
-		double[] heartData = getHRData(number1, number2).get("Heart");
-		double[] powerData = getHRData(number1, number2).get("Power");
-		double[] altitudeData = getHRData(number1, number2).get("Altitude");
+		
+		// protect if point is o,o
+		if (number1 < 0)
+			number1 = 0;
+		else if (number2 > getTime())
+			number2 = getTime();
+		String[] header = getHeaderData("HRData");
+		double[] heartData = new double[header.length];
+		double[] speedData = new double[header.length];
+		double[] cadenceData = new double[header.length];
+		double[] altitudeData = new double[header.length];
+		double[] powerData = new double[header.length];
+		double[] powerBalanceData = new double[header.length];
+		for (int i = 0; i < header.length; i++) {
+			if (i > number1 - 1 && i <= number2) {
+				String[] line = header[i].split("\t");
+				heartData[i] = Double.valueOf(line[0]);
+				speedData[i] = Double.valueOf(line[1]);
+				cadenceData[i] = Double.valueOf(line[2]);
+				altitudeData[i] = Double.valueOf(line[3]);
+				powerData[i] = Double.valueOf(line[4]);
+				if (line.length == 5) {
+					powerBalanceData = null;
+				} else {
+					powerBalanceData[i] = Double.valueOf(line[5]);
+				}
+			}
+		}
 		int length = speedData.length;
+		
 		// loop to calculate
 		for (int i = 0; i < length; i++) {
 
@@ -511,55 +539,58 @@ public class Data {
 
 		double distance = (averageSpeed / 10) * getTime() / 3600;
 		// Total distance
-		dataRow[0] = df.format(distance);
+		chunkRow[0] = df.format(distance);
 
 		// Average speed
-		dataRow[1] = Math.round((averageSpeed / 10) * 0.62);
+		chunkRow[1] = Math.round((averageSpeed / 10) * 0.62);
 		// Maximum speed
-		dataRow[2] = Math.round((maximumSpeed / 10) * 0.62);
+		chunkRow[2] = Math.round((maximumSpeed / 10) * 0.62);
 
 		// Average heart rate
-		dataRow[3] = Math.round(sumHeart / length);
+		chunkRow[3] = Math.round(sumHeart / length);
 		// Maximum heart rate
-		dataRow[4] = maxHeart;
+		chunkRow[4] = maxHeart;
 		// Minimum heart rate
-		dataRow[5] = minHeart;
+		chunkRow[5] = minHeart;
 		// Average power
-		dataRow[6] = Math.round(sumPower / length);
+		chunkRow[6] = Math.round(sumPower / length);
 		// Maximum power
-		dataRow[7] = maxPower;
+		chunkRow[7] = maxPower;
 		// Average altitude
-		dataRow[8] = Math.round(sumAltitude / length);
+		chunkRow[8] = Math.round(sumAltitude / length);
 		// Maximum altitude
-		dataRow[9] = maxAltitude;
+		chunkRow[9] = maxAltitude;
 		if (existPowerBalance()) {
 			// PI
 			int PI = getPowerBalance(powerData).get("PI");
-			dataRow[10] = PI;
+			chunkRow[10] = PI;
 			// Power Balance
 			String powerBalance = getPowerBalance(powerData).get("LPB").toString() + " / "
 					+ getPowerBalance(powerData).get("RPB").toString();
-			dataRow[11] = powerBalance;
+			chunkRow[11] = powerBalance;
 
 			// NP
 			int NP = getNP(powerData);
-			dataRow[12] = NP;
+			chunkRow[12] = NP;
 			// IF
 			double IF = getIF(NP, getFTP());
-			dataRow[13] = IF;
+			chunkRow[13] = IF;
 			// TSS
-			dataRow[14] = getTSS(getTime(), NP, IF, getFTP());
+			chunkRow[14] = getTSS(getTime(), NP, IF, getFTP());
 		} else {
 			// NP
 			int NP = getNP(powerData);
-			dataRow[10] = NP;
+			chunkRow[10] = NP;
 			// IF
 			double IF = getIF(NP, getFTP());
-			dataRow[11] = df.format(IF);
+			chunkRow[11] = df.format(IF);
 			// TSS
-			dataRow[12] = getTSS(getTime(), NP, IF, getFTP());
+			chunkRow[12] = getTSS(getTime(), NP, IF, getFTP());
 		}
-		chunkModel.addRow(dataRow);
+		for(Object c:chunkRow) {
+			System.out.println(c);
+		}
+		chunkModel.addRow(chunkRow);
 
 	}
 	
@@ -671,6 +702,50 @@ public class Data {
 	 * 
 	 * @return
 	 */
+	public HashMap<String, double[]> getChunkData(int number1, int number2) {
+		// protect if point is o,o
+		if (number1 < 0)
+			number1 = 0;
+		else if (number2 > getTime())
+			number2 = getTime();
+		String[] header = getHeaderData("HRData");
+		HashMap<String, double[]> map = new HashMap<String, double[]>();
+		double[] heart = new double[header.length];
+		double[] speed = new double[header.length];
+		double[] cadence = new double[header.length];
+		double[] altitude = new double[header.length];
+		double[] power = new double[header.length];
+		double[] powerBalance = new double[header.length];
+		for (int i = 0; i < header.length; i++) {
+			if (i > number1 - 1 && i <= number2) {
+				String[] line = header[i].split("\t");
+				heart[i] = Double.valueOf(line[0]);
+				speed[i] = Double.valueOf(line[1]);
+				cadence[i] = Double.valueOf(line[2]);
+				altitude[i] = Double.valueOf(line[3]);
+				power[i] = Double.valueOf(line[4]);
+				if (line.length == 5) {
+					powerBalance = null;
+				} else {
+					powerBalance[i] = Double.valueOf(line[5]);
+				}
+			}
+		}
+		map.put("Heart", heart);
+		map.put("Speed", speed);
+		map.put("Cadence", cadence);
+		map.put("Altitude", altitude);
+		map.put("Power", power);
+		if (powerBalance != null) {
+			map.put("PowerBalance", powerBalance);
+		}
+		return map;
+	}
+	/**
+	 * re-write HRData, for selection data
+	 * 
+	 * @return
+	 */
 	public HashMap<String, double[]> getHRData(int number1, int number2) {
 		// protect if point is o,o
 		if (number1 < 0)
@@ -695,7 +770,6 @@ public class Data {
 				power[i] = Double.valueOf(line[4]);
 				if (line.length == 5) {
 					powerBalance = null;
-
 				} else {
 					powerBalance[i] = Double.valueOf(line[5]);
 				}
