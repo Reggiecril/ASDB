@@ -212,20 +212,24 @@ public class Polar extends JFrame implements ActionListener, ChartMouseListener 
 		    @Override
 		    public void actionPerformed(ActionEvent e) {
 		    	resetChunkTable();
-		       System.out.println("startPoint"+startPoint+"  "+"endPoint"+endPoint);
+		       if(startPoint<0)
+		    	   startPoint=0;
+		       else if(endPoint>data.getTime())
+		    	   endPoint=data.getTime();
 		       int index=Integer.valueOf(text.getText().toString());
 		       int[]point=getChunkData(startPoint, endPoint,index);
-		       
 		       for(int i=0;i<point.length;i++) {
-		    	   if(i==0)
-		    		   data.chunkData(startPoint,point[0]);
-		    	   else
+		    	   if(i==0) {
+		    		   data.chunkData(startPoint,point[i]);
+		    	   }
+		    	   else {
 		    		   data.chunkData(point[i-1],point[i]);
-		    	   
+		    	   }
+		    	   System.out.println(point[i]);
 		       }
-		       
+		       chunkTable.setModel(data.chunkModel);
 				
-				chunkTable.setModel(data.chunkModel);
+				
 		       chunkPane.setVisible(true);
 		    }});
 		
@@ -452,6 +456,7 @@ public class Polar extends JFrame implements ActionListener, ChartMouseListener 
 		this.speed = speed;
 	}
 	public int[] getChunkData(int startPoint,int endPoint,int index) {
+		
 		int different=endPoint-startPoint+1;
 		int extra=different%index;
 		int average=(different-extra)/index;
