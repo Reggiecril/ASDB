@@ -4,5 +4,6 @@
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="lib" path="/home/reggie/github/ASDB/jfreechart-1.0.19/lib/jcommon-1.0.23.jar"/>
 	<classpathentry kind="lib" path="/home/reggie/github/ASDB/jfreechart-1.0.19/lib/jfreechart-1.0.19.jar"/>
+	<classpathentry kind="lib" path="/home/reggie/下载/jvider-1.8.1/jvider.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

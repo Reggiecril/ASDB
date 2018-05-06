@@ -56,7 +56,7 @@ import org.jfree.data.time.TimeSeriesCollection;
 import org.jfree.data.xy.XYDataset;
 import org.jfree.ui.RectangleEdge;
 
-public class Polar extends JFrame implements ActionListener,ChartMouseListener {
+public class Polar extends JFrame implements ActionListener, ChartMouseListener {
 	/**
 	 * 
 	 */
@@ -73,6 +73,8 @@ public class Polar extends JFrame implements ActionListener,ChartMouseListener {
 	JTable table = new JTable();
 	JTable dataTable = new JTable();
 	JTable summaryTable = new JTable();
+	JTable chunkTable = new JTable();
+	JPanel chunkPane = new JPanel();
 	private static String REGEX = "\\[(.*?)\\]";
 	Data data;
 	private boolean speed;
@@ -80,11 +82,10 @@ public class Polar extends JFrame implements ActionListener,ChartMouseListener {
 	DecimalFormat oneDecimal = new DecimalFormat("0.0");
 	DecimalFormat twoDecimal = new DecimalFormat("0.00");
 	private ChartPanel chartPanel;
-	 double px = 0.0, py = 0.0, prx = 0.0, pry = 0.0, chartpx = 0.0, chartpy = 0.0, 
-	            chartX = 0.0, chartY = 0.0;
-	private Point pointPress,pointRelease;
-	
-	
+	double px = 0.0, py = 0.0, prx = 0.0, pry = 0.0, chartpx = 0.0, chartpy = 0.0, chartX = 0.0, chartY = 0.0;
+	private Point pointPress, pointRelease;
+	int startPoint = 0, endPoint = 0;
+
 	Polar() {
 	}
 
@@ -138,15 +139,28 @@ public class Polar extends JFrame implements ActionListener,ChartMouseListener {
 		/// this is a panel in the north
 		// create table panel
 		JPanel tablePanel = new JPanel();
-		tablePanel.setPreferredSize(new Dimension(1200, 200));
+		tablePanel.setPreferredSize(new Dimension(1600, 200));
 
 		// this is a panel which have some components and a table shows header of data.
 		// create a header JPanel in tablePanel
 		JPanel headerPanel = new JPanel();
-		headerPanel.setPreferredSize(new Dimension(1200, 60));
+		headerPanel.setPreferredSize(new Dimension(1600, 60));
 		headerPanel.setBackground(Color.getHSBColor(0.0f, 0.0f, 93.33f));
 		tablePanel.add(headerPanel);
 
+		headerPanel.add(new JLabel("Header Table:"));
+		headerPanel.add(new JLabel(" "));
+		// date table
+		table.setRowHeight(30);
+		table.setBackground(Color.YELLOW);
+		table.setPreferredScrollableViewportSize(table.getPreferredSize());
+		JScrollPane scrollPane = new JScrollPane(table);
+		scrollPane.setPreferredSize(new Dimension(250, 50));
+		headerPanel.add(scrollPane, BorderLayout.WEST);
+
+		headerPanel.add(new JLabel("   "));
+		headerPanel.add(new JLabel("Unit Selection:"));
+		headerPanel.add(new JLabel(" "));
 		// Create a ComboBox to display two type data by MPH and KM/H
 		String[] speedItem = new String[] { "MILES", "KILOMETERS" };
 		cb = new JComboBox<String>(speedItem);
@@ -159,6 +173,7 @@ public class Polar extends JFrame implements ActionListener,ChartMouseListener {
 			 * @see
 			 * java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
 			 */
+			@Override
 			public void actionPerformed(ActionEvent event) {
 				@SuppressWarnings("unchecked")
 				JComboBox<String> cb = (JComboBox<String>) (event.getSource());
@@ -181,19 +196,40 @@ public class Polar extends JFrame implements ActionListener,ChartMouseListener {
 		});
 		headerPanel.add(cb);
 
+		headerPanel.add(new JLabel("   "));
+		headerPanel.add(new JLabel("Chunk:"));
+		headerPanel.add(new JLabel(" "));
+		// create text
+		JTextField text = new JTextField(5);
+		text.setPreferredSize(new Dimension(100, 30));
+		headerPanel.add(text);
+		// create button
+		JButton button = new JButton("Chunk");
+		headerPanel.add(button);
+		button.addActionListener(new ActionListener() {
+
+		    @Override
+		    public void actionPerformed(ActionEvent e) {
+		       System.out.println(startPoint+"  "+endPoint);
+		       Polar polar=new Polar();
+		       chunkPane.setVisible(true);
+		    }});
+		
+		
+		
 		// create summary Panel in the table panel
 		// create summary Panel
 		JPanel summaryPane = new JPanel();
-		summaryPane.setPreferredSize(new Dimension(1200, 200));
+		summaryPane.setPreferredSize(new Dimension(1600,100));
 		summaryPane.setBackground(Color.getHSBColor(0.0f, 0.0f, 93.33f));
 		tablePanel.add(summaryPane);
 
 		// create a JLabel in summaryPanel
-		JLabel summary = new JLabel("Summary", SwingConstants.CENTER);
-		summary.setFont(summary.getFont().deriveFont(24.0f));
-		summary.setMaximumSize(new Dimension(1200, 40));
-		summary.setPreferredSize(new Dimension(1200, 40));
-		summary.setMinimumSize(new Dimension(1200, 40));
+		JLabel summary = new JLabel("Summary", SwingConstants.LEFT);
+		summary.setFont(summary.getFont().deriveFont(16.0f));
+		summary.setMaximumSize(new Dimension(1600, 18));
+		summary.setPreferredSize(new Dimension(1600, 18));
+		summary.setMinimumSize(new Dimension(1600, 18));
 		summaryPane.add(summary, BorderLayout.NORTH);
 
 		// create summary table
@@ -201,40 +237,37 @@ public class Polar extends JFrame implements ActionListener,ChartMouseListener {
 		summaryTable.setBackground(Color.YELLOW);
 		summaryTable.setPreferredScrollableViewportSize(summaryTable.getPreferredSize());
 		JScrollPane scrollPane3 = new JScrollPane(summaryTable);
-		scrollPane3.setPreferredSize(new Dimension(1100, 50));
+		scrollPane3.setPreferredSize(new Dimension(1600, 50));
 		summaryPane.add(scrollPane3, BorderLayout.SOUTH);
+		
+		// create chunk Panel in the table panel
+		// create chunk Panel
+		
+		chunkPane.setPreferredSize(new Dimension(1600, 400));
+		chunkPane.setBackground(Color.getHSBColor(0.0f, 0.0f, 93.33f));
+		chunkPane.setVisible(false);
+		tablePanel.add(chunkPane);
 
-		JPanel extraPanel = new JPanel();
-		summaryPane.add(extraPanel, BorderLayout.SOUTH);
-		if (getData().existPowerBalance()) {
-			extraPanel.add(new JLabel("PI:"));
-			extraPanel.add(new JLabel(getData().getPowerBalance().get("PI").toString()));
-			extraPanel.add(new JLabel("         "));
+		// create chunk date
+		JLabel chunk = new JLabel("Chunk", SwingConstants.LEFT);
+		chunk.setFont(chunk.getFont().deriveFont(16.0f));
+		chunk.setMaximumSize(new Dimension(1600, 18));
+		chunk.setPreferredSize(new Dimension(1600, 18));
+		chunk.setMinimumSize(new Dimension(1600, 18));
+		chunkPane.add(chunk, BorderLayout.NORTH);
 
-			extraPanel.add(new JLabel("Power Balance(LPB/RPB):"));
-			extraPanel.add(new JLabel(getData().getPowerBalance().get("LPB").toString() + " / "
-					+ getData().getPowerBalance().get("RPB").toString()));
-			extraPanel.add(new JLabel("         "));
-		}
-		extraPanel.add(new JLabel("NP:"));
-		extraPanel.add(new JLabel(Integer.toString(getData().getNP())));
-		extraPanel.add(new JLabel("         "));
-
-		extraPanel.add(new JLabel("IF:"));
-		extraPanel.add(new JLabel(twoDecimal.format(getData().getIF())));
-		extraPanel.add(new JLabel("         "));
-
-		extraPanel.add(new JLabel("TSS:"));
-		extraPanel.add(new JLabel(Integer.toString(getData().getTSS())));
-
-		// date table
-		table.setRowHeight(30);
-		table.setBackground(Color.YELLOW);
-		table.setPreferredScrollableViewportSize(table.getPreferredSize());
-		JScrollPane scrollPane = new JScrollPane(table);
-		scrollPane.setPreferredSize(new Dimension(250, 50));
-		headerPanel.add(scrollPane, BorderLayout.WEST);
-
+		// create chunk table
+		chunkTable.setRowHeight(30);
+		chunkTable.setBackground(Color.YELLOW);
+		chunkTable.setPreferredScrollableViewportSize(chunkTable.getPreferredSize());
+		JScrollPane scrollPane4 = new JScrollPane(chunkTable);
+		scrollPane4.setPreferredSize(new Dimension(1600, 350));
+		chunkPane.add(scrollPane4, BorderLayout.SOUTH);
+		
+		
+		
+		
+		
 		/// this is a panel in south
 		// create bodyPanel
 		JPanel bodyPanel = new JPanel();
@@ -294,11 +327,11 @@ public class Polar extends JFrame implements ActionListener,ChartMouseListener {
 		tabbedPane.addTab("Data", dataPanel);
 		tabbedPane.setMnemonicAt(0, KeyEvent.VK_1);
 		bodyPanel.add(tabbedPane);
-		
-		chartPanel=new ChartPanel(chart());
+
+		chartPanel = new ChartPanel(chart());
 		chartPanel.addChartMouseListener(this);
 		chartPanel.addMouseListener(new CustomListener());
-		tabbedPane.addTab("Chart",chartPanel);
+		tabbedPane.addTab("Chart", chartPanel);
 		// Display frame in the center of window
 		contain.add(tablePanel, BorderLayout.NORTH);
 		contain.add(bodyPanel, BorderLayout.SOUTH);
@@ -317,7 +350,6 @@ public class Polar extends JFrame implements ActionListener,ChartMouseListener {
 		if (source.getText().equals("Save")) {
 			fd = new FileDialog(frame, "Save", FileDialog.SAVE);
 			fd.setVisible(true);
-
 		}
 
 		// When click "Load"
@@ -377,8 +409,11 @@ public class Polar extends JFrame implements ActionListener,ChartMouseListener {
 			// show a messagebox.
 			JOptionPane.showMessageDialog(newMenuAbout, "Welcome to Polar!" + "\n" + "                        :)");
 		}
+		if(e.getSource().equals(button)){
+			 this.dispose();
+			 resetBodyTable();
+		}
 	}
-
 
 	void resetBodyTable() {
 		data.dataModel.setRowCount(0);
@@ -399,11 +434,17 @@ public class Polar extends JFrame implements ActionListener,ChartMouseListener {
 	public void setSpeed(boolean speed) {
 		this.speed = speed;
 	}
+	public void getChunkData(int mouseX,int mouseY,int index) {
+		int different=mouseY-mouseX;
+		int extra=different%index;
+	}
 
 	public static void main(String[] args) {
 		Polar polar = new Polar();
 		polar.GUI();
 	}
+	
+
 	/**
 	 * add data to Chart
 	 * 
@@ -421,6 +462,7 @@ public class Polar extends JFrame implements ActionListener,ChartMouseListener {
 
 		return dataset;
 	}
+
 	/**
 	 * a whole chart to be returned
 	 * 
@@ -437,22 +479,20 @@ public class Polar extends JFrame implements ActionListener,ChartMouseListener {
 				dataset, true, true, false);
 		// Assign it to the chart
 		XYPlot plot = (XYPlot) chart.getPlot();
-		//X-axis1
+		// X-axis1
 		DateAxis rangeAxis1 = new DateAxis("Times");
 		rangeAxis1.setTickUnit(new DateTickUnit(DateTickUnitType.MINUTE, 5));
 		rangeAxis1.setDateFormatOverride(new SimpleDateFormat("HH:mm:ss"));
 		rangeAxis1.setLowerMargin(0.0001);
 		rangeAxis1.setUpperMargin(0.0001);
-		plot.setDomainAxis(0,rangeAxis1);
-		//X-axis2
+		plot.setDomainAxis(0, rangeAxis1);
+		// X-axis2
 		NumberAxis rangeAxis2 = new NumberAxis("");
-		rangeAxis2.setRange(0,getData().getTime());
+		rangeAxis2.setRange(0, getData().getTime());
 		rangeAxis2.setTickUnit(new NumberTickUnit(300));
 		rangeAxis2.setVisible(false);
 		plot.setDomainAxis(1, rangeAxis2);
-		
-		
-		
+
 		// Y-axis1
 		XYDataset dataset1 = createDataset("Speed");
 		NumberAxis axis1 = new NumberAxis("");
@@ -486,7 +526,7 @@ public class Polar extends JFrame implements ActionListener,ChartMouseListener {
 		plot.setDataset(1, dataset2);
 		plot.mapDatasetToRangeAxis(1, 1);
 		plot.setRenderer(1, r2);
-		//Y-axis3
+		// Y-axis3
 		XYDataset dataset3 = createDataset("Altitude");
 		NumberAxis axis3 = new NumberAxis("");
 		XYLineAndShapeRenderer r3 = new XYLineAndShapeRenderer();
@@ -537,83 +577,81 @@ public class Polar extends JFrame implements ActionListener,ChartMouseListener {
 		return chart;
 	}
 
-	
-	
-	 /**
-     * Receives chart mouse click events.
-     *
-     * @param event  the event.
-     */
+	/**
+	 * Receives chart mouse click events.
+	 *
+	 * @param event
+	 *            the event.
+	 */
 	@Override
-    public void chartMouseClicked(ChartMouseEvent event) {
+	public void chartMouseClicked(ChartMouseEvent event) {
+		//ignore
+	}
 
-        int mouseX = event.getTrigger().getX();
-        Point2D p = this.chartPanel.translateScreenToJava2D(
-                new Point(mouseX,0));
-        
-        XYPlot plot = (XYPlot) this.chart().getPlot();
-        ChartRenderingInfo info = this.chartPanel.getChartRenderingInfo();
-        Rectangle2D dataArea = info.getPlotInfo().getDataArea();
-        //
-        ValueAxis domainAxis = plot.getDomainAxis(1);
-        RectangleEdge domainAxisEdge = plot.getDomainAxisEdge();
-        chartX = domainAxis.java2DToValue(p.getX(), dataArea,
-                domainAxisEdge);
-        System.out.println(" " + chartX);
-        
-    }
 	@Override
 	public void chartMouseMoved(ChartMouseEvent event) {
 
-		   int mouseX = event.getTrigger().getX();
-		    int mouseY = event.getTrigger().getY();
-		   pointPress=new Point(mouseX,mouseY);
-	        
-	        
+		int mouseX = event.getTrigger().getX();
+		int mouseY = event.getTrigger().getY();
+		pointPress = new Point(mouseX, mouseY);
+
 	}
 
 	public class CustomListener implements MouseListener {
 
-        public void mouseClicked(MouseEvent e) {
-        
-        }
+		public void mouseClicked(MouseEvent e) {
+		}
 
-        public void mouseEntered(MouseEvent e) {
-      	  
-        }
+		public void mouseEntered(MouseEvent e) {
 
-        public void mouseExited(MouseEvent e) {
-      	  
-        }
+		}
 
-        public void mousePressed(MouseEvent e) {
-        	px = e.getX();
-            py = e.getY();
-        }
+		public void mouseExited(MouseEvent e) {
 
-        public void mouseReleased(MouseEvent e) {
-        	getMouse(pointPress);
-            System.out.println("Mouse Released! xpos = " + chartX + "; py = " + chartY);
-            //calculate pointRelease
-        	int x=0,y=0;
-        	prx = e.getX();
-            pry = e.getY();
-            x=(int) (pointPress.getX()+(prx-px));
-            y=(int) (pointPress.getY()+(pry-py));
-            pointRelease=new Point(x,y);
-            getMouse(pointRelease);
-            System.out.println("Mouse Released! xpos = " + chartX + "; py = " + chartY);
-        }
-    	public void getMouse(Point po) {
-    			Point2D p = chartPanel.translateScreenToJava2D(po);	
-    	        
-    	        XYPlot plot = (XYPlot) chart().getPlot();
-    	        ChartRenderingInfo info = chartPanel.getChartRenderingInfo();
-    	        Rectangle2D dataArea = info.getPlotInfo().getDataArea();
-    	        //
-    	        ValueAxis domainAxis = plot.getDomainAxis(1);
-    	        RectangleEdge domainAxisEdge = plot.getDomainAxisEdge();
-    	        chartX = domainAxis.java2DToValue(p.getX(), dataArea,domainAxisEdge);
-    	}
-   }
+		}
+
+		public void mousePressed(MouseEvent e) {
+			px = e.getX();
+			py = e.getY();
+		}
+
+		public void mouseReleased(MouseEvent e) {
+
+			
+		
+			int x = 0, y = 0;
+			prx = e.getX();
+			pry = e.getY();
+			if (prx - px < 0) {
+				resetSummaryTable();
+				data.summaryDate(isSpeed());
+				summaryTable.setModel(data.summaryModel);
+			} else if (prx - px == 0) {
+				
+			} else {
+				x = (int) (pointPress.getX() + (prx - px));
+				y = (int) (pointPress.getY() + (pry - py));
+				getMouse(pointPress);
+				startPoint = (int) chartX;
+				// calculate pointRelease
+				pointRelease = new Point(x, y);
+				getMouse(pointRelease);
+				endPoint = (int) chartX;
+				getData().summaryDate(startPoint, endPoint);
+				summaryTable.setModel(data.summaryModel);
+			}
+		}
+
+		public void getMouse(Point po) {
+			Point2D p = chartPanel.translateScreenToJava2D(po);
+
+			XYPlot plot = (XYPlot) chart().getPlot();
+			ChartRenderingInfo info = chartPanel.getChartRenderingInfo();
+			Rectangle2D dataArea = info.getPlotInfo().getDataArea();
+			//
+			ValueAxis domainAxis = plot.getDomainAxis(1);
+			RectangleEdge domainAxisEdge = plot.getDomainAxisEdge();
+			chartX = domainAxis.java2DToValue(p.getX(), dataArea, domainAxisEdge);
+		}
+	}
 }
