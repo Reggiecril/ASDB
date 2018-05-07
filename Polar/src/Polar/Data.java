@@ -1,3 +1,4 @@
+package Polar;
 import java.awt.Color;
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
@@ -37,12 +38,12 @@ public class Data {
 	DefaultTableModel dataModel = new DefaultTableModel();
 	DefaultTableModel summaryModel = new DefaultTableModel();
 	DefaultTableModel chunkModel = new DefaultTableModel();
-	HashMap<Integer, String> allMap = new HashMap<Integer, String>();
-	HashMap<String, Integer> headerMap = new HashMap<String, Integer>();
+	public HashMap<Integer, String> allMap = new HashMap<Integer, String>();
+	public HashMap<String, Integer> headerMap = new HashMap<String, Integer>();
 	private static String REGEX = "\\[(.*?)\\]";
 	DecimalFormat df = new DecimalFormat("0.0");
 
-	Data() {
+	public Data() {
 
 	}
 
