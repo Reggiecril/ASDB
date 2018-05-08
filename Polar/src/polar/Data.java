@@ -1,4 +1,4 @@
-package Polar;
+package polar;
 import java.awt.Color;
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
@@ -34,15 +34,15 @@ import org.jfree.data.time.TimeSeriesCollection;
 import org.jfree.data.xy.XYDataset;
 
 public class Data {
-	DefaultTableModel model = new DefaultTableModel();
-	DefaultTableModel dataModel = new DefaultTableModel();
-	DefaultTableModel summaryModel = new DefaultTableModel();
-	DefaultTableModel chunkModel = new DefaultTableModel();
+	public DefaultTableModel model = new DefaultTableModel();
+	public DefaultTableModel dataModel = new DefaultTableModel();
+	public DefaultTableModel summaryModel = new DefaultTableModel();
+	public DefaultTableModel chunkModel = new DefaultTableModel();
 	public HashMap<Integer, String> allMap = new HashMap<Integer, String>();
 	public HashMap<String, Integer> headerMap = new HashMap<String, Integer>();
 	private static String REGEX = "\\[(.*?)\\]";
 	DecimalFormat df = new DecimalFormat("0.0");
-
+	DecimalFormat secondFormat = new DecimalFormat("0.00");
 	public Data() {
 
 	}
@@ -294,7 +294,7 @@ public class Data {
 			dataRow[12] = NP;
 			// IF
 			double IF = getIF(NP, getFTP());
-			dataRow[13] = IF;
+			dataRow[13] = secondFormat.format(IF);
 			// TSS
 			dataRow[14] = getTSS(getTime(), NP, IF, getFTP());
 		} else {
@@ -354,7 +354,6 @@ public class Data {
 			number2 = getTime();
 		String[] header = getHeaderData("HRData");
 		int length=number2-number1+1;
-		System.out.println(length+"  "+number1+"  "+number2);
 		double[] heartData = new double[length];
 		double[] speedData = new double[length];
 		double[] cadenceData = new double[length];
@@ -452,7 +451,7 @@ public class Data {
 			dataRow[12] = NP;
 			// IF
 			double IF = getIF(NP, getFTP());
-			dataRow[13] = IF;
+			dataRow[13] = secondFormat.format(IF);
 			// TSS
 			dataRow[14] = getTSS(getTime(), NP, IF, getFTP());
 		} else {
@@ -513,7 +512,6 @@ public class Data {
 					number2 = getTime();
 				String[] header = getHeaderData("HRData");
 				int length=number2-number1+1;
-				System.out.println(length+"  "+number1+"  "+number2);
 				double[] heartData = new double[length];
 				double[] speedData = new double[length];
 				double[] cadenceData = new double[length];
@@ -611,7 +609,7 @@ public class Data {
 			chunkRow[12] = NP;
 			// IF
 			double IF = getIF(NP, getFTP());
-			chunkRow[13] = IF;
+			chunkRow[13] = secondFormat.format(IF);
 			// TSS
 			chunkRow[14] = getTSS(getTime(), NP, IF, getFTP());
 		} else {

@@ -1,4 +1,5 @@
-package Polar;
+package polar;
+
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.io.BufferedReader;
@@ -65,7 +66,7 @@ public class Polar extends JFrame implements ActionListener, ChartMouseListener 
 	JFrame frame;
 	JMenuBar menuBar;
 	JMenu fileMenu, fileSpace, fileHelp;
-	JMenuItem newMenuLoad, newMenuSave, newMenuExit, newMenuAbout;
+	JMenuItem newMenuLoad, newMenuSave, newMenuExit, newMenuAbout, newMenuComparsion;
 	JButton button;
 	FileDialog fd;
 	File file;
@@ -88,15 +89,7 @@ public class Polar extends JFrame implements ActionListener, ChartMouseListener 
 	private Point pointPress, pointRelease;
 	int startPoint = 0, endPoint = 0;
 
-	Polar() {
-	}
-
-	public Data getData() {
-		return data;
-	}
-
-	public void setData(Data data) {
-		this.data = data;
+	public Polar() {
 	}
 
 	public void GUI() {
@@ -118,10 +111,15 @@ public class Polar extends JFrame implements ActionListener, ChartMouseListener 
 		menuBar.add(fileHelp);
 
 		// files inside the menu bar(File ->...)
-		newMenuLoad = new JMenuItem("Load", new ImageIcon("Icon/load.png"));
+		newMenuLoad = new JMenuItem("Load", new ImageIcon("Icon/Load.png"));
 		newMenuLoad.setFont(new Font("sans-serif", Font.PLAIN, 20));
 		fileMenu.add(newMenuLoad);
 		newMenuLoad.addActionListener(this);
+
+		newMenuComparsion = new JMenuItem("Comparison", new ImageIcon("Icon/Comparison.png"));
+		newMenuComparsion.setFont(new Font("sans-serif", Font.PLAIN, 20));
+		fileMenu.add(newMenuComparsion);
+		newMenuComparsion.addActionListener(this);
 
 		newMenuSave = new JMenuItem("Save", new ImageIcon("Icon/Save.png"));
 		newMenuSave.setFont(new Font("sans-serif", Font.PLAIN, 20));
@@ -202,7 +200,7 @@ public class Polar extends JFrame implements ActionListener, ChartMouseListener 
 		headerPanel.add(new JLabel("Chunk:"));
 		headerPanel.add(new JLabel(" "));
 		// create text
-		
+
 		text.setPreferredSize(new Dimension(100, 30));
 		headerPanel.add(text);
 		// create button
@@ -210,36 +208,38 @@ public class Polar extends JFrame implements ActionListener, ChartMouseListener 
 		headerPanel.add(button);
 		button.addActionListener(new ActionListener() {
 
-		    @Override
-		    public void actionPerformed(ActionEvent e) {
-		    	resetChunkTable();
-		       if(startPoint<0)
-		    	   startPoint=0;
-		       else if(endPoint>data.getTime())
-		    	   endPoint=data.getTime();
-		       int index=Integer.valueOf(text.getText().toString());
-		       int[]point=getChunkData(startPoint, endPoint,index);
-		       for(int i=0;i<point.length;i++) {
-		    	   if(i==0) {
-		    		   data.chunkData(startPoint,point[i]);
-		    	   }
-		    	   else {
-		    		   data.chunkData(point[i-1],point[i]);
-		    	   }
-		    	   System.out.println(point[i]);
-		       }
-		       chunkTable.setModel(data.chunkModel);
-				
-				
-		       chunkPane.setVisible(true);
-		    }});
-		
-		
-		
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if (text.getText().isEmpty()) {
+					JOptionPane.showMessageDialog(frame,
+							"Please enter a chunk number!" + "\n" + "                        :)");
+				} else {
+					resetChunkTable();
+					if (startPoint < 0)
+						startPoint = 0;
+					else if (endPoint > data.getTime())
+						endPoint = data.getTime();
+					int index = Integer.valueOf(text.getText().toString());
+					int[] point = getChunkData(startPoint, endPoint, index);
+					for (int i = 0; i < point.length; i++) {
+						if (i == 0) {
+							data.chunkData(startPoint, point[i]);
+						} else {
+							data.chunkData(point[i - 1], point[i]);
+						}
+						System.out.println(point[i]);
+					}
+					chunkTable.setModel(data.chunkModel);
+
+					chunkPane.setVisible(true);
+				}
+			}
+		});
+
 		// create summary Panel in the table panel
 		// create summary Panel
 		JPanel summaryPane = new JPanel();
-		summaryPane.setPreferredSize(new Dimension(1600,100));
+		summaryPane.setPreferredSize(new Dimension(1600, 100));
 		summaryPane.setBackground(Color.getHSBColor(0.0f, 0.0f, 93.33f));
 		tablePanel.add(summaryPane);
 
@@ -258,10 +258,10 @@ public class Polar extends JFrame implements ActionListener, ChartMouseListener 
 		JScrollPane scrollPane3 = new JScrollPane(summaryTable);
 		scrollPane3.setPreferredSize(new Dimension(1600, 50));
 		summaryPane.add(scrollPane3, BorderLayout.SOUTH);
-		
+
 		// create chunk Panel in the table panel
 		// create chunk Panel
-		
+
 		chunkPane.setPreferredSize(new Dimension(1600, 200));
 		chunkPane.setBackground(Color.getHSBColor(0.0f, 0.0f, 93.33f));
 		chunkPane.setVisible(false);
@@ -282,11 +282,7 @@ public class Polar extends JFrame implements ActionListener, ChartMouseListener 
 		JScrollPane scrollPane4 = new JScrollPane(chunkTable);
 		scrollPane4.setPreferredSize(new Dimension(1600, 180));
 		chunkPane.add(scrollPane4, BorderLayout.SOUTH);
-		
-		
-		
-		
-		
+
 		/// this is a panel in south
 		// create bodyPanel
 		JPanel bodyPanel = new JPanel();
@@ -369,10 +365,46 @@ public class Polar extends JFrame implements ActionListener, ChartMouseListener 
 		if (source.getText().equals("Save")) {
 			fd = new FileDialog(frame, "Save", FileDialog.SAVE);
 			fd.setVisible(true);
-		}
+		} else if (source.getText().equals("Comparison")) {
+			FileDialog fd = new FileDialog(frame,"Open",FileDialog.LOAD);
+            fd.setVisible(true);   //create and display FileDialog.
+            try {   
+            	if ((fd.getDirectory()!=null) && (fd.getFile()!=null)){
+            	//get the path and file name.
+            	File file = new File(fd.getDirectory(),fd.getFile());
+                FileReader fr = new FileReader(file);
+                BufferedReader br = new BufferedReader(fr);
+    			
+                Data data=new Data();
+                String aline;
+                int i=1;
+                //load file data to TextArea
+                while ((aline=br.readLine()) != null){
+                	//collect date to HashMap
+                	data.allMap.put(i, aline);
+                	//collect header information
+                	Pattern p=Pattern.compile(REGEX);
+                	Matcher m=p.matcher(aline);
+                	if(m.find()) {
+                		//record the line number of each line.
+                		data.headerMap.put(m.group(1),i);
+                	}
+                	i++;
+                }
+                fr.close();
+                br.close();
+                Comparison comparsion=new Comparison(getData(),data);
+                comparsion.GUI();
+                
+            	}
+                
+              }
+            catch (IOException ioe){
+                ioe.printStackTrace();
+              }	
 
-		// When click "Load"
-		else if (source.getText().equals("Load")) {
+			// When click "Load"
+		} else if (source.getText().equals("Load")) {
 			resetBodyTable();
 			resetSummaryTable();
 			data.model.setRowCount(0);
@@ -428,41 +460,51 @@ public class Polar extends JFrame implements ActionListener, ChartMouseListener 
 			// show a messagebox.
 			JOptionPane.showMessageDialog(newMenuAbout, "Welcome to Polar!" + "\n" + "                        :)");
 		}
-		if(e.getSource().equals(button)){
-			 this.dispose();
-			 resetBodyTable();
+		if (e.getSource().equals(button)) {
+			this.dispose();
+			resetBodyTable();
 		}
 	}
 
-	void resetBodyTable() {
+	public void resetBodyTable() {
 		data.dataModel.setRowCount(0);
 	}
 
-	void resetSummaryTable() {
+	public void resetSummaryTable() {
 		data.summaryModel.setRowCount(0);
 	}
 
-	void resetTable() {
+	public void resetTable() {
 		data.model.setRowCount(0);
 	}
 
-	void resetChunkTable() {
+	public void resetChunkTable() {
 		data.chunkModel.setRowCount(0);
 	}
+
 	public boolean isSpeed() {
 		return speed;
+	}
+
+	public Data getData() {
+		return data;
+	}
+
+	public void setData(Data data) {
+		this.data = data;
 	}
 
 	public void setSpeed(boolean speed) {
 		this.speed = speed;
 	}
-	public int[] getChunkData(int startPoint,int endPoint,int index) {
-		
-		int different=endPoint-startPoint+1;
-		int extra=different%index;
-		int average=(different-extra)/index;
-		int []eachPoint=new int[index];
-		for(int i=0;i<index;i++) {
+
+	public int[] getChunkData(int startPoint, int endPoint, int index) {
+
+		int different = endPoint - startPoint + 1;
+		int extra = different % index;
+		int average = (different - extra) / index;
+		int[] eachPoint = new int[index];
+		for (int i = 0; i < index; i++) {
 			if (extra == 0) {
 				if (i == 0) {
 					eachPoint[i] = startPoint + average - 1;
@@ -473,7 +515,7 @@ public class Polar extends JFrame implements ActionListener, ChartMouseListener 
 				if (i == 0) {
 					eachPoint[i] = startPoint + average;
 				} else {
-					eachPoint[i]=eachPoint[i-1]+average+1;
+					eachPoint[i] = eachPoint[i - 1] + average + 1;
 				}
 				extra--;
 			}
@@ -485,7 +527,6 @@ public class Polar extends JFrame implements ActionListener, ChartMouseListener 
 		Polar polar = new Polar();
 		polar.GUI();
 	}
-	
 
 	/**
 	 * add data to Chart
@@ -493,7 +534,7 @@ public class Polar extends JFrame implements ActionListener, ChartMouseListener 
 	 * @param speed
 	 * @return
 	 */
-	private XYDataset createDataset(String strings) {
+	public XYDataset createDataset(String strings) {
 
 		// Initialize
 
@@ -627,7 +668,7 @@ public class Polar extends JFrame implements ActionListener, ChartMouseListener 
 	 */
 	@Override
 	public void chartMouseClicked(ChartMouseEvent event) {
-		//ignore
+		// ignore
 	}
 
 	@Override
@@ -667,7 +708,7 @@ public class Polar extends JFrame implements ActionListener, ChartMouseListener 
 				data.summaryDate(isSpeed());
 				summaryTable.setModel(data.summaryModel);
 			} else if (prx - px == 0) {
-				
+
 			} else {
 				resetSummaryTable();
 				x = (int) (pointPress.getX() + (prx - px));

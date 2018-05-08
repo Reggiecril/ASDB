@@ -1,4 +1,4 @@
-package Polar;
+package polar;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.FileDialog;
