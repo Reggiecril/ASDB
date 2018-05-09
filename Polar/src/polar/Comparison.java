@@ -1,5 +1,6 @@
 package polar;
 
+import java.awt.BasicStroke;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Container;
@@ -47,6 +48,8 @@ import org.jfree.chart.axis.DateTickUnitType;
 import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.axis.NumberTickUnit;
 import org.jfree.chart.axis.ValueAxis;
+import org.jfree.chart.panel.CrosshairOverlay;
+import org.jfree.chart.plot.Crosshair;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.data.time.TimeSeriesCollection;
@@ -64,7 +67,7 @@ public class Comparison extends JFrame {
 	public JTable headerTable = new JTable();
 	public JTable differentTable = new JTable();
 	public ComparisonData CD = new ComparisonData();
-	
+	public Crosshair xCrosshair;
 	JTextField text = new JTextField(5);
 
 	public Comparison(Data firstData, Data secondData) {
@@ -85,6 +88,11 @@ public class Comparison extends JFrame {
 		firstChartPanel.setPreferredSize(new Dimension(1200, 300));
 		firstChartPanel.setMinimumSize(new Dimension(1200, 300));
 		firstChartPanel.addChartMouseListener(new FirstChartListener());
+		CrosshairOverlay crosshairOverlay = new CrosshairOverlay();
+		this.xCrosshair = new Crosshair(Double.NaN, Color.GRAY, new BasicStroke(0f));
+		this.xCrosshair.setLabelVisible(true);
+		crosshairOverlay.addDomainCrosshair(xCrosshair);
+		firstChartPanel.addOverlay(crosshairOverlay);
 
 		secondChart = chart(getSecondData(), "Comparison Chart");
 		secondChartPanel = new ChartPanel(chart(getSecondData(), "Comparison Chart"));
@@ -93,6 +101,7 @@ public class Comparison extends JFrame {
 		secondChartPanel.setPreferredSize(new Dimension(1200, 300));
 		secondChartPanel.setMinimumSize(new Dimension(1200, 300));
 		secondChartPanel.addChartMouseListener(new SecondChartListener());
+		secondChartPanel.addOverlay(crosshairOverlay);
 
 		JPanel functionPanel = new JPanel();
 		functionPanel.setSize(1200, 50);
@@ -103,7 +112,7 @@ public class Comparison extends JFrame {
 
 		// date table
 		JPanel tablePanel = new JPanel();
-		
+
 		headerTable.setRowHeight(30);
 		headerTable.setBackground(Color.YELLOW);
 		headerTable.setPreferredScrollableViewportSize(headerTable.getPreferredSize());
@@ -135,20 +144,24 @@ public class Comparison extends JFrame {
 					int[] firstDataArray = getChunkData(getFirstData(), index);
 					int[] secondDataArray = getChunkData(getSecondData(), index);
 					for (int i = 0; i < index; i++) {
-						System.out.println("i:"+firstDataArray[i]+" index:"+index);
+						System.out.println("i:" + firstDataArray[i] + " index:" + index);
 						if (i == 0) {
-							CD.chunkData(getFirstData(),"Origin",i,0, firstDataArray[i]);
-							CD.chunkData(getSecondData(),"Comparison",i,0, secondDataArray[i]);
-							CD.chunkDifferentData(getFirstData(), getSecondData(), "Different", i,0,firstDataArray[i],0,secondDataArray[i]);
+							CD.chunkData(getFirstData(), "Origin", i, 0, firstDataArray[i]);
+							CD.chunkData(getSecondData(), "Comparison", i, 0, secondDataArray[i]);
+							CD.chunkDifferentData(getFirstData(), getSecondData(), "Different", i, 0, firstDataArray[i],
+									0, secondDataArray[i]);
 							CD.addEmptyRowDifferent();
 						} else {
-							CD.chunkData(getFirstData(),"Origin",i,firstDataArray[i-1], firstDataArray[i]);
-							CD.chunkData(getSecondData(),"Comparison",i,secondDataArray[i-1], secondDataArray[i]);
-							CD.chunkDifferentData(getFirstData(), getSecondData(), "Different", i,firstDataArray[i-1],firstDataArray[i],secondDataArray[i-1],secondDataArray[i]);
+							CD.chunkData(getFirstData(), "Origin", i, firstDataArray[i - 1], firstDataArray[i]);
+							CD.chunkData(getSecondData(), "Comparison", i, secondDataArray[i - 1], secondDataArray[i]);
+							CD.chunkDifferentData(getFirstData(), getSecondData(), "Different", i,
+									firstDataArray[i - 1], firstDataArray[i], secondDataArray[i - 1],
+									secondDataArray[i]);
 							CD.addEmptyRowDifferent();
 						}
-						
-					}differentTable.setModel(CD.ComparisonChunkModel);
+
+					}
+					differentTable.setModel(CD.ComparisonChunkModel);
 				}
 
 			}
@@ -156,7 +169,7 @@ public class Comparison extends JFrame {
 		});
 		functionPanel.add(button);
 
-		
+		firstChartPanel.addOverlay(crosshairOverlay);
 		tablePanel.setSize(1200, 350);
 		tablePanel.setBackground(Color.WHITE);
 		tablePanel.setMaximumSize(new Dimension(1200, 350));
@@ -171,13 +184,13 @@ public class Comparison extends JFrame {
 		differentPanel.setPreferredSize(new Dimension(1200, 350));
 		tablePanel.add(differentPanel, BorderLayout.CENTER);
 
-		
 		JPanel firstPanel = new JPanel();
 		firstPanel.setSize(1200, 300);
 		firstPanel.setMaximumSize(new Dimension(1200, 300));
 		firstPanel.setPreferredSize(new Dimension(1200, 300));
 		firstPanel.setMinimumSize(new Dimension(1200, 300));
 		firstPanel.add(firstChartPanel);
+
 		JPanel secondPanel = new JPanel();
 		secondPanel.setSize(1200, 300);
 		secondPanel.setMaximumSize(new Dimension(1200, 300));
@@ -220,13 +233,14 @@ public class Comparison extends JFrame {
 	public void resetDifferentTable() {
 		CD.ComparisonDifferentModel.setRowCount(0);
 	}
+
 	public void resetChunkModel() {
 		CD.ComparisonChunkModel.setRowCount(0);
 	}
 
 	public int[] getChunkData(Data data, int index) {
 
-		int different = data.getTime()+1;
+		int different = data.getTime() + 1;
 		int extra = different % index;
 		int average = (different - extra) / index;
 		int[] eachPoint = new int[index];
@@ -248,11 +262,11 @@ public class Comparison extends JFrame {
 		}
 		return eachPoint;
 	}
+
 	public class FirstChartListener implements ChartMouseListener {
 
 		@Override
 		public void chartMouseClicked(ChartMouseEvent event) {
-		
 
 		}
 
@@ -282,6 +296,11 @@ public class Comparison extends JFrame {
 			CD.calculateDifferentData(point, "Different", getFirstData(), getSecondData());
 			differentTable.setModel(CD.ComparisonDifferentModel);
 
+			Rectangle2D Area = firstChartPanel.getScreenDataArea();
+			ValueAxis xAxis = plot.getDomainAxis();
+			double x = xAxis.java2DToValue(event.getTrigger().getX(), Area, RectangleEdge.BOTTOM);
+			xCrosshair.setValue(x);
+
 		}
 
 	}
@@ -290,7 +309,7 @@ public class Comparison extends JFrame {
 
 		@Override
 		public void chartMouseClicked(ChartMouseEvent event) {
-			
+
 		}
 
 		@Override
@@ -319,6 +338,10 @@ public class Comparison extends JFrame {
 			CD.calculateDifferentData(point, "Different", getFirstData(), getSecondData());
 			differentTable.setModel(CD.ComparisonDifferentModel);
 
+			Rectangle2D Area = firstChartPanel.getScreenDataArea();
+			ValueAxis xAxis = plot.getDomainAxis();
+			double x = xAxis.java2DToValue(event.getTrigger().getX(), Area, RectangleEdge.BOTTOM);
+			xCrosshair.setValue(x);
 		}
 
 	}
