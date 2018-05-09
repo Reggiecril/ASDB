@@ -219,6 +219,8 @@ public class Polar extends JFrame implements ActionListener, ChartMouseListener 
 						startPoint = 0;
 					else if (endPoint > data.getTime())
 						endPoint = data.getTime();
+					else if (endPoint == 0)
+						endPoint = data.getTime();
 					int index = Integer.valueOf(text.getText().toString());
 					int[] point = getChunkData(startPoint, endPoint, index);
 					for (int i = 0; i < point.length; i++) {
@@ -227,7 +229,6 @@ public class Polar extends JFrame implements ActionListener, ChartMouseListener 
 						} else {
 							data.chunkData(point[i - 1], point[i]);
 						}
-						System.out.println(point[i]);
 					}
 					chunkTable.setModel(data.chunkModel);
 
@@ -366,42 +367,43 @@ public class Polar extends JFrame implements ActionListener, ChartMouseListener 
 			fd = new FileDialog(frame, "Save", FileDialog.SAVE);
 			fd.setVisible(true);
 		} else if (source.getText().equals("Comparison")) {
-			FileDialog fd = new FileDialog(frame,"Open",FileDialog.LOAD);
-            fd.setVisible(true);   //create and display FileDialog.
-            try {   
-            	if ((fd.getDirectory()!=null) && (fd.getFile()!=null)){
-            	//get the path and file name.
-            	File file = new File(fd.getDirectory(),fd.getFile());
-                FileReader fr = new FileReader(file);
-                BufferedReader br = new BufferedReader(fr);
-    			
-                Data data=new Data();
-                String aline;
-                int i=1;
-                //load file data to TextArea
-                while ((aline=br.readLine()) != null){
-                	//collect date to HashMap
-                	data.allMap.put(i, aline);
-                	//collect header information
-                	Pattern p=Pattern.compile(REGEX);
-                	Matcher m=p.matcher(aline);
-                	if(m.find()) {
-                		//record the line number of each line.
-                		data.headerMap.put(m.group(1),i);
-                	}
-                	i++;
-                }
-                fr.close();
-                br.close();
-                Comparison comparsion=new Comparison(getData(),data);
-                comparsion.GUI();
-                
-            	}
-                
-              }
-            catch (IOException ioe){
-                ioe.printStackTrace();
-              }	
+			FileDialog fd = new FileDialog(frame, "Open", FileDialog.LOAD);
+			fd.setVisible(true); // create and display FileDialog.
+			try {
+				if ((fd.getDirectory() != null) && (fd.getFile() != null)) {
+					// get the path and file name.
+					File file = new File(fd.getDirectory(), fd.getFile());
+					FileReader fr = new FileReader(file);
+					BufferedReader br = new BufferedReader(fr);
+					Data data = new Data();
+					String aline;
+					int i = 1;
+					// load file data to TextArea
+					while ((aline = br.readLine()) != null) {
+						// collect date to HashMap
+						data.allMap.put(i, aline);
+						// collect header information
+						Pattern p = Pattern.compile(REGEX);
+						Matcher m = p.matcher(aline);
+						if (m.find()) {
+							// record the line number of each line.
+							data.headerMap.put(m.group(1), i);
+						}
+						i++;
+					}
+					fr.close();
+					br.close();
+					Comparison comparsion = new Comparison(getData(), data);
+					comparsion.GUI();
+					ComparisonData cd = new ComparisonData();
+					cd.defaultHeaderData();
+					comparsion.headerTable.setModel(cd.ComparisonHeaderModel);
+
+				}
+
+			} catch (IOException ioe) {
+				ioe.printStackTrace();
+			}
 
 			// When click "Load"
 		} else if (source.getText().equals("Load")) {
@@ -705,8 +707,10 @@ public class Polar extends JFrame implements ActionListener, ChartMouseListener 
 			pry = e.getY();
 			if (prx - px < 0) {
 				resetSummaryTable();
-				data.summaryDate(isSpeed());
+				data.summaryDate(true);
 				summaryTable.setModel(data.summaryModel);
+				startPoint = 0;
+				endPoint = 0;
 			} else if (prx - px == 0) {
 
 			} else {

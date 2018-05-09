@@ -1,12 +1,17 @@
 package polar;
 
-import java.awt.BorderLayout;import java.awt.Color;
+import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.FileDialog;
+import java.awt.FlowLayout;
 import java.awt.Label;
+import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -20,78 +25,155 @@ import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.JTextField;
 import javax.swing.SwingConstants;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.TableColumn;
+import javax.swing.text.TableView.TableRow;
 
 import org.jfree.chart.ChartFactory;
+import org.jfree.chart.ChartMouseEvent;
+import org.jfree.chart.ChartMouseListener;
 import org.jfree.chart.ChartPanel;
+import org.jfree.chart.ChartRenderingInfo;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.DateAxis;
 import org.jfree.chart.axis.DateTickUnit;
 import org.jfree.chart.axis.DateTickUnitType;
 import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.axis.NumberTickUnit;
+import org.jfree.chart.axis.ValueAxis;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.data.time.TimeSeriesCollection;
 import org.jfree.data.xy.XYDataset;
+import org.jfree.ui.RectangleEdge;
 
-public class Comparison extends JFrame{
-	private Data firstData,secondData;
-	private ChartPanel firstChartPanel,secondChartPanel;
-	
-	public Comparison(Data firstData,Data secondData){
+public class Comparison extends JFrame {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	public Data firstData, secondData;
+	public ChartPanel firstChartPanel, secondChartPanel;
+	public JFreeChart firstChart, secondChart;
+	public JTable headerTable = new JTable();
+	public JTable differentTable = new JTable();
+	public JTable chunkTable = new JTable();
+	public ComparisonData CD = new ComparisonData();
+	JTextField text = new JTextField(5);
+
+	public Comparison(Data firstData, Data secondData) {
 		this.setFirstData(firstData);
 		this.setSecondData(secondData);
 	}
-	
+
 	public void GUI() {
-		JFrame frame=new JFrame();
+		JFrame frame = new JFrame();
 		Container contain = frame.getContentPane();
 		contain.setLayout(new BoxLayout(contain, BoxLayout.Y_AXIS));
-		
-		//two chart Panel
-		firstChartPanel = new ChartPanel(chart(getFirstData(),"Origin Chart"));
-		firstChartPanel.setSize(new Dimension(1200,300));
-		firstChartPanel.setMaximumSize(new Dimension(1200,300));
-		firstChartPanel.setPreferredSize(new Dimension(1200,300));
-		firstChartPanel.setMinimumSize(new Dimension(1200,300));
-		secondChartPanel = new ChartPanel(chart(getSecondData(),"Comparison Chart"));
-		secondChartPanel.setSize(new Dimension(1200,300));
-		secondChartPanel.setMaximumSize(new Dimension(1200,300));
-		secondChartPanel.setPreferredSize(new Dimension(1200,300));
-		secondChartPanel.setMinimumSize(new Dimension(1200,300));
-		
-		JPanel functionPanel=new JPanel();
-		functionPanel.setSize(1200,200);
-		functionPanel.setMaximumSize(new Dimension(1200,200));
-		functionPanel.setPreferredSize(new Dimension(1200,200));
-		functionPanel.setMinimumSize(new Dimension(1200,200));
-		
-		JPanel firstPanel=new JPanel();
+
+		// two chart Panel
+		firstChart = chart(getFirstData(), "Origin Chart");
+		firstChartPanel = new ChartPanel(firstChart);
+		firstChartPanel.setSize(new Dimension(1200, 300));
+		firstChartPanel.setMaximumSize(new Dimension(1200, 300));
+		firstChartPanel.setPreferredSize(new Dimension(1200, 300));
+		firstChartPanel.setMinimumSize(new Dimension(1200, 300));
+		firstChartPanel.addChartMouseListener(new FirstChartListener());
+
+		secondChart = chart(getSecondData(), "Comparison Chart");
+		secondChartPanel = new ChartPanel(chart(getSecondData(), "Comparison Chart"));
+		secondChartPanel.setSize(new Dimension(1200, 300));
+		secondChartPanel.setMaximumSize(new Dimension(1200, 300));
+		secondChartPanel.setPreferredSize(new Dimension(1200, 300));
+		secondChartPanel.setMinimumSize(new Dimension(1200, 300));
+		secondChartPanel.addChartMouseListener(new SecondChartListener());
+
+		JPanel functionPanel = new JPanel();
+		functionPanel.setSize(1200, 100);
+		functionPanel.setMaximumSize(new Dimension(1200, 100));
+		functionPanel.setPreferredSize(new Dimension(1200, 100));
+		functionPanel.setMinimumSize(new Dimension(1200, 100));
+		functionPanel.setLayout(new FlowLayout());
+
+		// date table
+		headerTable.setRowHeight(30);
+		headerTable.setBackground(Color.YELLOW);
+		headerTable.setPreferredScrollableViewportSize(headerTable.getPreferredSize());
+		JScrollPane scrollPane = new JScrollPane(headerTable);
+		scrollPane.setPreferredSize(new Dimension(250, 50));
+		functionPanel.add(scrollPane);
+
+		functionPanel.add(new JLabel("   "));
+		functionPanel.add(new JLabel("Chunk:"));
+		functionPanel.add(new JLabel(" "));
+		// create text
+
+		text.setPreferredSize(new Dimension(100, 30));
+		functionPanel.add(text);
+		// create button
+		JButton button = new JButton("Chunk");
+		button.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if (text.getText().isEmpty()) {
+					JOptionPane.showMessageDialog(frame,
+							"Please enter a chunk number!" + "\n" + "                        :)");
+				} else {
+					resetChunkTable();
+
+				}
+
+			}
+
+		});
+		functionPanel.add(button);
+
+		JPanel tablePanel = new JPanel();
+		tablePanel.setSize(1200, 200);
+		tablePanel.setMaximumSize(new Dimension(1200, 200));
+		tablePanel.setPreferredSize(new Dimension(1200, 200));
+		tablePanel.setMinimumSize(new Dimension(1200, 200));
+
+		// create summary table
+		differentTable.setRowHeight(30);
+		differentTable.setBackground(Color.YELLOW);
+		differentTable.setPreferredScrollableViewportSize(differentTable.getPreferredSize());
+		JScrollPane differentPanel = new JScrollPane(differentTable);
+		differentPanel.setPreferredSize(new Dimension(1200, 200));
+		tablePanel.add(differentPanel, BorderLayout.CENTER);
+
+		JPanel firstPanel = new JPanel();
 		firstPanel.setSize(1200, 300);
-		firstPanel.setMaximumSize(new Dimension(1200,300));
-		firstPanel.setPreferredSize(new Dimension(1200,300));
-		firstPanel.setMinimumSize(new Dimension(1200,300));
+		firstPanel.setMaximumSize(new Dimension(1200, 300));
+		firstPanel.setPreferredSize(new Dimension(1200, 300));
+		firstPanel.setMinimumSize(new Dimension(1200, 300));
 		firstPanel.add(firstChartPanel);
-		JPanel secondPanel=new JPanel();
+		JPanel secondPanel = new JPanel();
 		secondPanel.setSize(1200, 300);
-		secondPanel.setMaximumSize(new Dimension(1200,300));
-		secondPanel.setPreferredSize(new Dimension(1200,300));
-		secondPanel.setMinimumSize(new Dimension(1200,300));
+		secondPanel.setMaximumSize(new Dimension(1200, 300));
+		secondPanel.setPreferredSize(new Dimension(1200, 300));
+		secondPanel.setMinimumSize(new Dimension(1200, 300));
 		secondPanel.add(secondChartPanel);
 
-	
 		// Display frame in the center of window
 		contain.add(functionPanel);
+		contain.add(tablePanel);
 		contain.add(firstPanel);
 		contain.add(secondPanel);
 		// frame
 		frame.pack();
-		frame.setSize(1200, 800);
-		frame.setVisible(true);	
+		frame.setSize(1200, 1000);
+		frame.setVisible(true);
 		frame.setLocationRelativeTo(null);
 	}
+
 	public Data getFirstData() {
 		return firstData;
 	}
@@ -107,13 +189,101 @@ public class Comparison extends JFrame{
 	public void setSecondData(Data secondData) {
 		this.secondData = secondData;
 	}
+
+	public void resetHeaderTable() {
+		CD.ComparisonHeaderModel.setRowCount(0);
+	}
+
+	public void resetDifferentTable() {
+		CD.ComparisonDifferentModel.setRowCount(0);
+	}
+
+	public void resetChunkTable() {
+		CD.ComparisonChunkModel.setRowCount(0);
+	}
+
+	public class FirstChartListener implements ChartMouseListener {
+
+		@Override
+		public void chartMouseClicked(ChartMouseEvent event) {
+			resetHeaderTable();
+			resetDifferentTable();
+			int mouseX = event.getTrigger().getX();
+			int mouseY = event.getTrigger().getY();
+
+			Point2D p = firstChartPanel.translateScreenToJava2D(new Point(mouseX, mouseY));
+
+			XYPlot plot = (XYPlot) firstChart.getPlot();
+			ChartRenderingInfo info = firstChartPanel.getChartRenderingInfo();
+			Rectangle2D dataArea = info.getPlotInfo().getDataArea();
+			//
+			ValueAxis domainAxis = plot.getDomainAxis(1);
+			RectangleEdge domainAxisEdge = plot.getDomainAxisEdge();
+			double chartX = domainAxis.java2DToValue(p.getX(), dataArea, domainAxisEdge);
+			int point = (int) chartX;
+			CD.getHeaderData(point);
+			headerTable.setModel(CD.ComparisonHeaderModel);
+			CD.getDifferentData(point, "Origin Chart", getFirstData());
+			CD.getDifferentData(point, "Comparison Chart", getSecondData());
+			CD.calculateDifferentData(point, "Different", getFirstData(), getSecondData());
+			differentTable.setModel(CD.ComparisonDifferentModel);
+
+		}
+
+		@Override
+		public void chartMouseMoved(ChartMouseEvent event) {
+
+			int mouseX = event.getTrigger().getX();
+			int mouseY = event.getTrigger().getY();
+
+		}
+
+	}
+
+	public class SecondChartListener implements ChartMouseListener {
+
+		@Override
+		public void chartMouseClicked(ChartMouseEvent event) {
+			resetHeaderTable();
+			resetDifferentTable();
+			int mouseX = event.getTrigger().getX();
+			int mouseY = event.getTrigger().getY();
+
+			Point2D p = secondChartPanel.translateScreenToJava2D(new Point(mouseX, mouseY));
+
+			XYPlot plot = (XYPlot) secondChart.getPlot();
+			ChartRenderingInfo info = secondChartPanel.getChartRenderingInfo();
+			Rectangle2D dataArea = info.getPlotInfo().getDataArea();
+			//
+			ValueAxis domainAxis = plot.getDomainAxis(1);
+			RectangleEdge domainAxisEdge = plot.getDomainAxisEdge();
+			double chartX = domainAxis.java2DToValue(p.getX(), dataArea, domainAxisEdge);
+			int point = (int) chartX;
+			CD.getHeaderData(point);
+			headerTable.setModel(CD.ComparisonHeaderModel);
+			CD.getDifferentData(point, "Origin Chart", getFirstData());
+			CD.getDifferentData(point, "Comparison Chart", getSecondData());
+			CD.calculateDifferentData(point, "Different", getFirstData(), getSecondData());
+			differentTable.setModel(CD.ComparisonDifferentModel);
+		}
+
+		@Override
+		public void chartMouseMoved(ChartMouseEvent event) {
+
+			int mouseX = event.getTrigger().getX();
+			int mouseY = event.getTrigger().getY();
+
+		}
+
+	}
+
 	/**
 	 * add data to Chart
 	 * 
 	 * @param speed
 	 * @return
 	 */
-	public XYDataset createDataset(String strings,Data data) {
+	public XYDataset createDataset(String strings, Data data) {
 
 		// Initialize
 
@@ -131,8 +301,8 @@ public class Comparison extends JFrame{
 	 * @param speed
 	 * @return
 	 */
-	public JFreeChart chart(Data data,String title) {
-		XYDataset dataset = createDataset("Speed",data);
+	public JFreeChart chart(Data data, String title) {
+		XYDataset dataset = createDataset("Speed", data);
 
 		// Create chart
 		JFreeChart chart = ChartFactory.createTimeSeriesChart(title, // Chart title
@@ -152,11 +322,11 @@ public class Comparison extends JFrame{
 		NumberAxis rangeAxis2 = new NumberAxis("");
 		rangeAxis2.setRange(0, data.getTime());
 		rangeAxis2.setTickUnit(new NumberTickUnit(300));
-		rangeAxis2.setVisible(false);
+		rangeAxis2.setVisible(true);
 		plot.setDomainAxis(1, rangeAxis2);
 
 		// Y-axis1
-		XYDataset dataset1 = createDataset("Speed",data);
+		XYDataset dataset1 = createDataset("Speed", data);
 		NumberAxis axis1 = new NumberAxis("");
 		XYLineAndShapeRenderer r1 = new XYLineAndShapeRenderer();
 		r1.setSeriesPaint(0, new Color(134, 179, 51));
@@ -173,7 +343,7 @@ public class Comparison extends JFrame{
 		plot.mapDatasetToRangeAxis(0, 0);
 		plot.setRenderer(0, r1);
 		// Y-axis2
-		XYDataset dataset2 = createDataset("Cadence",data);
+		XYDataset dataset2 = createDataset("Cadence", data);
 		NumberAxis axis2 = new NumberAxis("");
 		XYLineAndShapeRenderer r2 = new XYLineAndShapeRenderer();
 		r2.setSeriesPaint(0, Color.ORANGE);
@@ -189,7 +359,7 @@ public class Comparison extends JFrame{
 		plot.mapDatasetToRangeAxis(1, 1);
 		plot.setRenderer(1, r2);
 		// Y-axis3
-		XYDataset dataset3 = createDataset("Altitude",data);
+		XYDataset dataset3 = createDataset("Altitude", data);
 		NumberAxis axis3 = new NumberAxis("");
 		XYLineAndShapeRenderer r3 = new XYLineAndShapeRenderer();
 		r3.setSeriesPaint(0, Color.BLACK);
@@ -205,7 +375,7 @@ public class Comparison extends JFrame{
 		plot.mapDatasetToRangeAxis(2, 2);
 		plot.setRenderer(2, r3);
 		// Y-axis4
-		XYDataset dataset4 = createDataset("Heart",data);
+		XYDataset dataset4 = createDataset("Heart", data);
 		NumberAxis axis4 = new NumberAxis("");
 		XYLineAndShapeRenderer r4 = new XYLineAndShapeRenderer();
 		r4.setSeriesPaint(0, new Color(254, 67, 101));
@@ -221,7 +391,7 @@ public class Comparison extends JFrame{
 		plot.mapDatasetToRangeAxis(3, 3);
 		plot.setRenderer(3, r4);
 		// Y-axis5
-		XYDataset dataset5 = createDataset("Power",data);
+		XYDataset dataset5 = createDataset("Power", data);
 		XYLineAndShapeRenderer r5 = new XYLineAndShapeRenderer();
 		r5.setSeriesPaint(0, new Color(164, 34, 168));
 		r5.setSeriesShapesVisible(0, false);

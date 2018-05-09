@@ -1,4 +1,5 @@
 package polar;
+
 import java.awt.Color;
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
@@ -38,11 +39,13 @@ public class Data {
 	public DefaultTableModel dataModel = new DefaultTableModel();
 	public DefaultTableModel summaryModel = new DefaultTableModel();
 	public DefaultTableModel chunkModel = new DefaultTableModel();
+	
 	public HashMap<Integer, String> allMap = new HashMap<Integer, String>();
 	public HashMap<String, Integer> headerMap = new HashMap<String, Integer>();
 	private static String REGEX = "\\[(.*?)\\]";
 	DecimalFormat df = new DecimalFormat("0.0");
 	DecimalFormat secondFormat = new DecimalFormat("0.00");
+
 	public Data() {
 
 	}
@@ -320,14 +323,13 @@ public class Data {
 		// summary body data
 		if (existPowerBalance()) {
 			String[] columns1 = { "Total distance covered", "Average speed(KM/H)", "Maximum speed(KM/H)",
-					"Average heart rate", "Maximum heart rate", "Minimum heart rate", "Average power",
-					"Maximum power", "Average altitude", "Maximum altitude", "PI", "Power Balance(LPB/RPB)", "NP",
-					"IF", "TSS" };
+					"Average heart rate", "Maximum heart rate", "Minimum heart rate", "Average power", "Maximum power",
+					"Average altitude", "Maximum altitude", "PI", "Power Balance(LPB/RPB)", "NP", "IF", "TSS" };
 			summaryModel.setColumnIdentifiers(columns1);
 		} else {
 			String[] columns1 = { "Total distance covered", "Average speed(KM/H)", "Maximum speed(KM/H)",
-					"Average heart rate", "Maximum heart rate", "Minimum heart rate", "Average power",
-					"Maximum power", "Average altitude", "Maximum altitude", "NP", "IF", "TSS" };
+					"Average heart rate", "Maximum heart rate", "Minimum heart rate", "Average power", "Maximum power",
+					"Average altitude", "Maximum altitude", "NP", "IF", "TSS" };
 			summaryModel.setColumnIdentifiers(columns1);
 		}
 
@@ -346,24 +348,33 @@ public class Data {
 		int maxPower = 0;
 		int sumAltitude = 0;
 		int maxAltitude = 0;
-		
+
 		// protect if point is o,o
 		if (number1 < 0)
 			number1 = 0;
 		else if (number2 > getTime())
 			number2 = getTime();
 		String[] header = getHeaderData("HRData");
-		int length=number2-number1+1;
+		if(getParams().get("Interval")!="1") {
+			int interval=Integer.valueOf(getParams().get("Interval"));
+			String[] header1=new String[header.length*interval];
+			for(int i=0,length=header.length;i<length;i++) {
+				for(int j=0;j<interval;j++)
+					header1[i*interval+j]=header[i];
+			}
+			header=header1;
+		}
+		int length = number2 - number1 + 1;
 		double[] heartData = new double[length];
 		double[] speedData = new double[length];
 		double[] cadenceData = new double[length];
 		double[] altitudeData = new double[length];
 		double[] powerData = new double[length];
 		double[] powerBalanceData = new double[length];
-		int j=0;
-		int a=0;
-		for(String x:header) {
-			if(j>=number1 && j<=number2) {
+		int j = 0;
+		int a = 0;
+		for (String x : header) {
+			if (j >= number1 && j <= number2) {
 				String[] line = x.split("\t");
 				heartData[a] = Double.valueOf(line[0]);
 				speedData[a] = Double.valueOf(line[1]);
@@ -379,7 +390,6 @@ public class Data {
 			}
 			j++;
 		}
-
 
 		// loop to calculate
 		for (int i = 0; i < length; i++) {
@@ -467,24 +477,24 @@ public class Data {
 		summaryModel.addRow(dataRow);
 
 	}
+
 	/**
 	 * re-write summary table for selection data.
 	 * 
 	 * @param speed
 	 */
 	public void chunkData(int number1, int number2) {
-		
+
 		// summary body data
 		if (existPowerBalance()) {
 			String[] columns1 = { "Distance covered", "Average speed(KM/H)", "Maximum speed(KM/H)",
-					"Average heart rate", "Maximum heart rate", "Minimum heart rate", "Average power",
-					"Maximum power", "Average altitude", "Maximum altitude", "PI", "Power Balance(LPB/RPB)", "NP",
-					"IF", "TSS" };
+					"Average heart rate", "Maximum heart rate", "Minimum heart rate", "Average power", "Maximum power",
+					"Average altitude", "Maximum altitude", "PI", "Power Balance(LPB/RPB)", "NP", "IF", "TSS" };
 			chunkModel.setColumnIdentifiers(columns1);
 		} else {
 			String[] columns1 = { "Distance covered", "Average speed(KM/H)", "Maximum speed(KM/H)",
-					"Average heart rate", "Maximum heart rate", "Minimum heart rate", "Average power",
-					"Maximum power", "Average altitude", "Maximum altitude", "NP", "IF", "TSS" };
+					"Average heart rate", "Maximum heart rate", "Minimum heart rate", "Average power", "Maximum power",
+					"Average altitude", "Maximum altitude", "NP", "IF", "TSS" };
 			chunkModel.setColumnIdentifiers(columns1);
 		}
 
@@ -503,42 +513,50 @@ public class Data {
 		int maxPower = 0;
 		int sumAltitude = 0;
 		int maxAltitude = 0;
-		
+
 		// protect if point is o,o
 		// protect if point is o,o
-				if (number1 < 0)
-					number1 = 0;
-				else if (number2 > getTime())
-					number2 = getTime();
-				String[] header = getHeaderData("HRData");
-				int length=number2-number1+1;
-				double[] heartData = new double[length];
-				double[] speedData = new double[length];
-				double[] cadenceData = new double[length];
-				double[] altitudeData = new double[length];
-				double[] powerData = new double[length];
-				double[] powerBalanceData = new double[length];
-				int j=0;
-				int a=0;
-				for(String x:header) {
-					if(j>=number1 && j<=number2) {
-						String[] line = x.split("\t");
-						heartData[a] = Double.valueOf(line[0]);
-						speedData[a] = Double.valueOf(line[1]);
-						cadenceData[a] = Double.valueOf(line[2]);
-						altitudeData[a] = Double.valueOf(line[3]);
-						powerData[a] = Double.valueOf(line[4]);
-						if (line.length == 5) {
-							powerBalanceData = null;
-						} else {
-							powerBalanceData[a] = Double.valueOf(line[5]);
-						}
-						a++;
-					}
-					j++;
+		if (number1 < 0)
+			number1 = 0;
+		else if (number2 > getTime())
+			number2 = getTime();
+		String[] header = getHeaderData("HRData");
+		if(getParams().get("Interval")!="1") {
+			int interval=Integer.valueOf(getParams().get("Interval"));
+			String[] header1=new String[header.length*interval];
+			for(int i=0,length=header.length;i<length;i++) {
+				for(int j=0;j<interval;j++)
+					header1[i*interval+j]=header[i];
+			}
+			header=header1;
+		}
+		int length = number2 - number1 + 1;
+		double[] heartData = new double[length];
+		double[] speedData = new double[length];
+		double[] cadenceData = new double[length];
+		double[] altitudeData = new double[length];
+		double[] powerData = new double[length];
+		double[] powerBalanceData = new double[length];
+		int j = 0;
+		int a = 0;
+		for (String x : header) {
+			if (j >= number1 && j <= number2) {
+				String[] line = x.split("\t");
+				heartData[a] = Double.valueOf(line[0]);
+				speedData[a] = Double.valueOf(line[1]);
+				cadenceData[a] = Double.valueOf(line[2]);
+				altitudeData[a] = Double.valueOf(line[3]);
+				powerData[a] = Double.valueOf(line[4]);
+				if (line.length == 5) {
+					powerBalanceData = null;
+				} else {
+					powerBalanceData[a] = Double.valueOf(line[5]);
 				}
-		
-		
+				a++;
+			}
+			j++;
+		}
+
 		// loop to calculate
 		for (int i = 0; i < length; i++) {
 
@@ -625,8 +643,7 @@ public class Data {
 		chunkModel.addRow(chunkRow);
 
 	}
-	
-	
+
 	/**
 	 * ==========================================================================================================
 	 * ==========================================================================================================
@@ -697,6 +714,15 @@ public class Data {
 	 */
 	public HashMap<String, double[]> getHRData() {
 		String[] header = getHeaderData("HRData");
+		if(getParams().get("Interval")!="1") {
+			int interval=Integer.valueOf(getParams().get("Interval"));
+			String[] header1=new String[header.length*interval];
+			for(int i=0,length=header.length;i<length;i++) {
+				for(int j=0;j<interval;j++)
+					header1[i*interval+j]=header[i];
+			}
+			header=header1;
+		}
 		HashMap<String, double[]> map = new HashMap<String, double[]>();
 		double[] heart = new double[header.length];
 		double[] speed = new double[header.length];
@@ -741,27 +767,78 @@ public class Data {
 		else if (number2 > getTime())
 			number2 = getTime();
 		String[] header = getHeaderData("HRData");
+		if(getParams().get("Interval")!="1") {
+			int interval=Integer.valueOf(getParams().get("Interval"));
+			String[] header1=new String[header.length*interval];
+			for(int i=0,length=header.length;i<length;i++) {
+				for(int j=0;j<interval;j++)
+					header1[i*interval+j]=header[i];
+			}
+			header=header1;
+		}
 		HashMap<String, double[]> map = new HashMap<String, double[]>();
-		int length=number2-number1;
-		double[] heart = new double[length];
-		double[] speed = new double[length];
-		double[] cadence = new double[length];
-		double[] altitude = new double[length];
-		double[] power = new double[length];
-		double[] powerBalance = new double[length];
-		for (int i = 0; i < length; i++) {
-			if (i > number1 - 1 && i <= number2) {
-				String[] line = header[i].split("\t");
-				heart[i] = Double.valueOf(line[0]);
-				speed[i] = Double.valueOf(line[1]);
-				cadence[i] = Double.valueOf(line[2]);
-				altitude[i] = Double.valueOf(line[3]);
-				power[i] = Double.valueOf(line[4]);
+		int length = number2 - number1 + 1;
+		double[] heartData = new double[length];
+		double[] speedData = new double[length];
+		double[] cadenceData = new double[length];
+		double[] altitudeData = new double[length];
+		double[] powerData = new double[length];
+		double[] powerBalanceData = new double[length];
+		int j = 0;
+		int a = 0;
+		for (String x : header) {
+			if (j >= number1 && j <= number2) {
+				String[] line = x.split("\t");
+				heartData[a] = Double.valueOf(line[0]);
+				speedData[a] = Double.valueOf(line[1]);
+				cadenceData[a] = Double.valueOf(line[2]);
+				altitudeData[a] = Double.valueOf(line[3]);
+				powerData[a] = Double.valueOf(line[4]);
 				if (line.length == 5) {
-					powerBalance = null;
+					powerBalanceData = null;
 				} else {
-					powerBalance[i] = Double.valueOf(line[5]);
+					powerBalanceData[a] = Double.valueOf(line[5]);
 				}
+				a++;
+			}
+			j++;
+		}
+		map.put("Heart", heartData);
+		map.put("Speed", speedData);
+		map.put("Cadence", cadenceData);
+		map.put("Altitude", altitudeData);
+		map.put("Power", powerData);
+		if (powerBalanceData!= null) {
+			map.put("PowerBalance", powerBalanceData);
+		}
+		return map;
+	}
+	/**
+	 * get the data from 'HRData',spilt to Heart,Speed,Cadence,Altitude,Power.
+	 * 
+	 * @return
+	 */
+	public HashMap<String, double[]> getChartHRData() {
+		String[] header = getHeaderData("HRData");
+		HashMap<String, double[]> map = new HashMap<String, double[]>();
+		double[] heart = new double[header.length];
+		double[] speed = new double[header.length];
+		double[] cadence = new double[header.length];
+		double[] altitude = new double[header.length];
+		double[] power = new double[header.length];
+		double[] powerBalance = new double[header.length];
+		for (int i = 0; i < header.length; i++) {
+			String[] line = header[i].split("\t");
+			heart[i] = Double.valueOf(line[0]);
+			speed[i] = Double.valueOf(line[1]);
+			cadence[i] = Double.valueOf(line[2]);
+			altitude[i] = Double.valueOf(line[3]);
+			power[i] = Double.valueOf(line[4]);
+			if (line.length == 5) {
+				powerBalance = null;
+
+			} else {
+				powerBalance[i] = Double.valueOf(line[5]);
 			}
 		}
 		map.put("Heart", heart);
@@ -774,7 +851,6 @@ public class Data {
 		}
 		return map;
 	}
-
 	/**
 	 * get the data from 'IntTimes',then named every elements.
 	 * 
@@ -964,7 +1040,7 @@ public class Data {
 	 * 
 	 * @return
 	 */
-	public HashMap<String, Integer> getPowerBalance(double[] powerBalance) {
+	public HashMap<String, Integer> getPowerBalance(double... powerBalance) {
 
 		HashMap<String, Integer> map = new HashMap<String, Integer>();
 		int totalLPB = 0, totalPI = 0;
@@ -1039,17 +1115,8 @@ public class Data {
 		return result;
 	}
 
-	// public void getFTP() {
-	// double[] power = getHRData().get("Power");
-	// double total=0;
-	// for (int i = 0; i < power.length; i++) {
-	// if(i<1800) {
-	// total+=power[i];
-	// }
-	// }
-	// double average=total/1800;
-	// System.out.println(average);
-	// }
+	
+
 	/**
 	 * ==========================================================================================================
 	 * ==========================================================================================================
@@ -1074,11 +1141,11 @@ public class Data {
 		TimeSeries series4 = new TimeSeries("Heart");
 		TimeSeries series5 = new TimeSeries("Power");
 
-		double[] dataSpeed = getHRData().get("Speed");
-		double[] dataCadence = getHRData().get("Cadence");
-		double[] dataAltitude = getHRData().get("Altitude");
-		double[] dataHeart = getHRData().get("Heart");
-		double[] dataPower = getHRData().get("Power");
+		double[] dataSpeed = getChartHRData().get("Speed");
+		double[] dataCadence = getChartHRData().get("Cadence");
+		double[] dataAltitude = getChartHRData().get("Altitude");
+		double[] dataHeart = getChartHRData().get("Heart");
+		double[] dataPower = getChartHRData().get("Power");
 		int interval = Integer.valueOf(getParams().get("Interval"));
 		Second current = new Second(0, 0, 0, 1, 1, 2018);
 		for (double nowTime : dataSpeed) {
