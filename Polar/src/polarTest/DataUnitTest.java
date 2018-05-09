@@ -132,7 +132,7 @@ public class DataUnitTest {
 		HashMap<String, double[]> map = new HashMap<String, double[]>();
 		map=data.getHRData(1000,3979);
 		assertEquals(6,map.size());
-		assertEquals(2979,map.get("Heart").length);
+		assertEquals(2980,map.get("Heart").length);
 	}
 	/**
 	 * test IntTimes

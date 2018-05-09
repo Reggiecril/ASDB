@@ -69,7 +69,9 @@ public class Comparison extends JFrame {
 	public ComparisonData CD = new ComparisonData();
 	public Crosshair xCrosshair;
 	JTextField text = new JTextField(5);
-
+	public Comparison() {
+		
+	}
 	public Comparison(Data firstData, Data secondData) {
 		this.setFirstData(firstData);
 		this.setSecondData(secondData);

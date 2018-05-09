@@ -8,7 +8,9 @@ public class ComparisonData {
 	public DefaultTableModel ComparisonHeaderModel = new DefaultTableModel();
 	public DefaultTableModel ComparisonDifferentModel = new DefaultTableModel();
 	public DefaultTableModel ComparisonChunkModel = new DefaultTableModel();
-
+	public ComparisonData() {
+		
+	}
 	/**
 	 * a method which add data to Comparison Header table
 	 */
@@ -126,7 +128,14 @@ public class ComparisonData {
 			x = "";
 		ComparisonChunkModel.addRow(row);
 	}
-
+/**
+ * chunk data from two object
+ * @param data
+ * @param title
+ * @param section
+ * @param number1
+ * @param number2
+ */
 	public void chunkData(Data data, String title, int section, int number1, int number2) {
 		HashMap<String, Double> map = getChunkMap(data, number1, number2);
 		// chunk data
@@ -251,7 +260,7 @@ public class ComparisonData {
 	}
 
 	/**
-	 * re-write summary table for selection data.
+	 * put the chunk data to map
 	 * 
 	 * @param speed
 	 */
@@ -394,7 +403,12 @@ public class ComparisonData {
 		return map;
 
 	}
-
+/**
+ * get point position and get data
+ * @param point
+ * @param data
+ * @return
+ */
 	public HashMap<String, Double> getPointData(int point, Data data) {
 		HashMap<String, Double> map = new HashMap<String, Double>();
 
@@ -451,7 +465,12 @@ public class ComparisonData {
 		}
 		return map;
 	}
-
+/**
+ * calculate average and put them to map
+ * @param point
+ * @param data
+ * @return
+ */
 	public HashMap<String, Double> getAverage(int point, Data data) {
 		HashMap<String, Double> map = new HashMap<String, Double>();
 		String[] header = data.getHeaderData("HRData");
@@ -505,7 +524,11 @@ public class ComparisonData {
 		return map;
 
 	}
-
+/**
+ * calculate time of the point position
+ * @param point
+ * @return
+ */
 	public String getTime(int point) {
 		int hour, minute, second;
 		second = (point % 3600) % 60;
