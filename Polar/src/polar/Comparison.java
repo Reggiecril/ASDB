@@ -63,8 +63,8 @@ public class Comparison extends JFrame {
 	public JFreeChart firstChart, secondChart;
 	public JTable headerTable = new JTable();
 	public JTable differentTable = new JTable();
-	public JTable chunkTable = new JTable();
 	public ComparisonData CD = new ComparisonData();
+	
 	JTextField text = new JTextField(5);
 
 	public Comparison(Data firstData, Data secondData) {
@@ -95,13 +95,15 @@ public class Comparison extends JFrame {
 		secondChartPanel.addChartMouseListener(new SecondChartListener());
 
 		JPanel functionPanel = new JPanel();
-		functionPanel.setSize(1200, 100);
-		functionPanel.setMaximumSize(new Dimension(1200, 100));
-		functionPanel.setPreferredSize(new Dimension(1200, 100));
-		functionPanel.setMinimumSize(new Dimension(1200, 100));
+		functionPanel.setSize(1200, 50);
+		functionPanel.setMaximumSize(new Dimension(1200, 50));
+		functionPanel.setPreferredSize(new Dimension(1200, 50));
+		functionPanel.setMinimumSize(new Dimension(1200, 50));
 		functionPanel.setLayout(new FlowLayout());
 
 		// date table
+		JPanel tablePanel = new JPanel();
+		
 		headerTable.setRowHeight(30);
 		headerTable.setBackground(Color.YELLOW);
 		headerTable.setPreferredScrollableViewportSize(headerTable.getPreferredSize());
@@ -126,8 +128,27 @@ public class Comparison extends JFrame {
 					JOptionPane.showMessageDialog(frame,
 							"Please enter a chunk number!" + "\n" + "                        :)");
 				} else {
-					resetChunkTable();
-
+					differentTable.setVisible(true);
+					resetDifferentTable();
+					resetChunkModel();
+					int index = Integer.valueOf(text.getText().toString());
+					int[] firstDataArray = getChunkData(getFirstData(), index);
+					int[] secondDataArray = getChunkData(getSecondData(), index);
+					for (int i = 0; i < index; i++) {
+						System.out.println("i:"+firstDataArray[i]+" index:"+index);
+						if (i == 0) {
+							CD.chunkData(getFirstData(),"Origin",i,0, firstDataArray[i]);
+							CD.chunkData(getSecondData(),"Comparison",i,0, secondDataArray[i]);
+							CD.chunkDifferentData(getFirstData(), getSecondData(), "Different", i,0,firstDataArray[i],0,secondDataArray[i]);
+							CD.addEmptyRowDifferent();
+						} else {
+							CD.chunkData(getFirstData(),"Origin",i,firstDataArray[i-1], firstDataArray[i]);
+							CD.chunkData(getSecondData(),"Comparison",i,secondDataArray[i-1], secondDataArray[i]);
+							CD.chunkDifferentData(getFirstData(), getSecondData(), "Different", i,firstDataArray[i-1],firstDataArray[i],secondDataArray[i-1],secondDataArray[i]);
+							CD.addEmptyRowDifferent();
+						}
+						
+					}differentTable.setModel(CD.ComparisonChunkModel);
 				}
 
 			}
@@ -135,20 +156,22 @@ public class Comparison extends JFrame {
 		});
 		functionPanel.add(button);
 
-		JPanel tablePanel = new JPanel();
-		tablePanel.setSize(1200, 200);
-		tablePanel.setMaximumSize(new Dimension(1200, 200));
-		tablePanel.setPreferredSize(new Dimension(1200, 200));
-		tablePanel.setMinimumSize(new Dimension(1200, 200));
-
-		// create summary table
+		
+		tablePanel.setSize(1200, 350);
+		tablePanel.setBackground(Color.WHITE);
+		tablePanel.setMaximumSize(new Dimension(1200, 350));
+		tablePanel.setPreferredSize(new Dimension(1200, 350));
+		tablePanel.setMinimumSize(new Dimension(1200, 350));
+		// create table
+		differentTable.setVisible(false);
 		differentTable.setRowHeight(30);
 		differentTable.setBackground(Color.YELLOW);
 		differentTable.setPreferredScrollableViewportSize(differentTable.getPreferredSize());
 		JScrollPane differentPanel = new JScrollPane(differentTable);
-		differentPanel.setPreferredSize(new Dimension(1200, 200));
+		differentPanel.setPreferredSize(new Dimension(1200, 350));
 		tablePanel.add(differentPanel, BorderLayout.CENTER);
 
+		
 		JPanel firstPanel = new JPanel();
 		firstPanel.setSize(1200, 300);
 		firstPanel.setMaximumSize(new Dimension(1200, 300));
@@ -197,17 +220,48 @@ public class Comparison extends JFrame {
 	public void resetDifferentTable() {
 		CD.ComparisonDifferentModel.setRowCount(0);
 	}
-
-	public void resetChunkTable() {
+	public void resetChunkModel() {
 		CD.ComparisonChunkModel.setRowCount(0);
 	}
 
+	public int[] getChunkData(Data data, int index) {
+
+		int different = data.getTime()+1;
+		int extra = different % index;
+		int average = (different - extra) / index;
+		int[] eachPoint = new int[index];
+		for (int i = 0; i < index; i++) {
+			if (extra == 0) {
+				if (i == 0) {
+					eachPoint[i] = 0 + average - 1;
+				} else {
+					eachPoint[i] = eachPoint[i - 1] + average;
+				}
+			} else {
+				if (i == 0) {
+					eachPoint[i] = 0 + average;
+				} else {
+					eachPoint[i] = eachPoint[i - 1] + average + 1;
+				}
+				extra--;
+			}
+		}
+		return eachPoint;
+	}
 	public class FirstChartListener implements ChartMouseListener {
 
 		@Override
 		public void chartMouseClicked(ChartMouseEvent event) {
+		
+
+		}
+
+		@Override
+		public void chartMouseMoved(ChartMouseEvent event) {
+			differentTable.setVisible(true);
 			resetHeaderTable();
 			resetDifferentTable();
+			resetChunkModel();
 			int mouseX = event.getTrigger().getX();
 			int mouseY = event.getTrigger().getY();
 
@@ -230,22 +284,21 @@ public class Comparison extends JFrame {
 
 		}
 
-		@Override
-		public void chartMouseMoved(ChartMouseEvent event) {
-
-			int mouseX = event.getTrigger().getX();
-			int mouseY = event.getTrigger().getY();
-
-		}
-
 	}
 
 	public class SecondChartListener implements ChartMouseListener {
 
 		@Override
 		public void chartMouseClicked(ChartMouseEvent event) {
+			
+		}
+
+		@Override
+		public void chartMouseMoved(ChartMouseEvent event) {
+			differentTable.setVisible(true);
 			resetHeaderTable();
 			resetDifferentTable();
+			resetChunkModel();
 			int mouseX = event.getTrigger().getX();
 			int mouseY = event.getTrigger().getY();
 
@@ -265,13 +318,6 @@ public class Comparison extends JFrame {
 			CD.getDifferentData(point, "Comparison Chart", getSecondData());
 			CD.calculateDifferentData(point, "Different", getFirstData(), getSecondData());
 			differentTable.setModel(CD.ComparisonDifferentModel);
-		}
-
-		@Override
-		public void chartMouseMoved(ChartMouseEvent event) {
-
-			int mouseX = event.getTrigger().getX();
-			int mouseY = event.getTrigger().getY();
 
 		}
 
