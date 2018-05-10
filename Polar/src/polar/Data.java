@@ -39,6 +39,7 @@ public class Data {
 	public DefaultTableModel dataModel = new DefaultTableModel();
 	public DefaultTableModel summaryModel = new DefaultTableModel();
 	public DefaultTableModel chunkModel = new DefaultTableModel();
+	public DefaultTableModel heartModel = new DefaultTableModel();
 	
 	public HashMap<Integer, String> allMap = new HashMap<Integer, String>();
 	public HashMap<String, Integer> headerMap = new HashMap<String, Integer>();
@@ -643,7 +644,73 @@ public class Data {
 		chunkModel.addRow(chunkRow);
 
 	}
+	/**
+	 * a method which add data to table
+	 */
+	public void heartData() {
 
+		// header table date
+	
+		int maxHeart=Integer.valueOf(getParams().get("MaxHR"));
+		String zone1=(int)(maxHeart*0.5)+"-"+(int)(maxHeart*0.6)+"(50%-60%)";
+		String zone2=(int)(maxHeart*0.6)+"-"+(int)(maxHeart*0.7)+"(60%-70%)";
+		String zone3=(int)(maxHeart*0.7)+"-"+(int)(maxHeart*0.8)+"(70%-80%)";
+		String zone4=(int)(maxHeart*0.8)+"-"+(int)(maxHeart*0.9)+"(80%-90%)";
+		String zone5=(int)(maxHeart*0.9)+"-"+maxHeart+"(90%-100%)";
+		String[] columns = { zone1,zone2,zone3,zone4,zone5 };
+		heartModel.setColumnIdentifiers(columns);
+		double[] heart=getHRData().get("Heart");
+		double[] speed=getHRData().get("Speed");
+		double heartZone1=0,heartZone2=0,heartZone3=0,heartZone4=0,heartZone5=0;
+		double speedTotleZone1=0,speedTotleZone2=0,speedTotleZone3=0,speedTotleZone4=0,speedTotleZone5=0;
+		for(int i=0;i<heart.length;i++) {
+			if(heart[i]>=(int)(maxHeart*0.5)&&heart[i]<(int)(maxHeart*0.6)) {
+				heartZone1++;
+				speedTotleZone1+=speed[i];
+			}else if(heart[i]>=(int)(maxHeart*0.6)&&heart[i]<(int)(maxHeart*0.7)) {
+				heartZone2++;
+				speedTotleZone2+=speed[i];
+			}else if(heart[i]>=(int)(maxHeart*0.7)&&heart[i]<(int)(maxHeart*0.8)) {
+				heartZone3++;
+				speedTotleZone3+=speed[i];
+			}else if(heart[i]>=(int)(maxHeart*0.8)&&heart[i]<(int)(maxHeart*0.9)) {
+				heartZone4++;
+				speedTotleZone4+=speed[i];
+			}else if(heart[i]>=(int)(maxHeart*0.9)&&heart[i]<=maxHeart) {
+				heartZone5++;
+				speedTotleZone5+=speed[i];
+			}
+		}
+		double length=getTime();
+		double totalDistance=(speedTotleZone1+speedTotleZone2+speedTotleZone3+speedTotleZone4+speedTotleZone5)/3600/10;
+		Object[] heartRow = new Object[5];
+		heartRow[0]=df.format(heartZone1/length*100)+"%";
+		heartRow[1]=df.format(heartZone2/length*100)+"%";
+		heartRow[2]=df.format(heartZone3/length*100)+"%";
+		heartRow[3]=df.format(heartZone4/length*100)+"%";
+		heartRow[4]=df.format(heartZone5/length*100)+"%";
+		heartModel.addRow(heartRow);
+		
+		Object[] emptyRow=new Object[5];
+		heartModel.addRow(emptyRow);
+		
+		Object[] distanceRow = new Object[5];
+		distanceRow[0]=df.format(speedTotleZone1/3600/10)+"KM/H";
+		distanceRow[1]=df.format(speedTotleZone2/3600/10)+"KM/H";
+		distanceRow[2]=df.format(speedTotleZone3/3600/10)+"KM/H";
+		distanceRow[3]=df.format(speedTotleZone4/3600/10)+"KM/H";
+		distanceRow[4]=df.format(speedTotleZone5/3600/10)+"KM/H";
+		heartModel.addRow(distanceRow);
+		
+		Object[] distancePercentRow = new Object[5];
+		distancePercentRow[0]=df.format(speedTotleZone1/3600/10/totalDistance*100)+"%";
+		distancePercentRow[1]=df.format(speedTotleZone2/3600/10/totalDistance*100)+"%";
+		distancePercentRow[2]=df.format(speedTotleZone3/3600/10/totalDistance*100)+"%";
+		distancePercentRow[3]=df.format(speedTotleZone4/3600/10/totalDistance*100)+"%";
+		distancePercentRow[4]=df.format(speedTotleZone5/3600/10/totalDistance*100)+"%";
+		heartModel.addRow(distancePercentRow);
+
+	}
 	/**
 	 * ==========================================================================================================
 	 * ==========================================================================================================

@@ -71,9 +71,11 @@ public class Home extends JFrame{
 	                br.close();
 	                //add data to table and display then hide this frame.
 	                data.tableData();
+	                data.heartData();
 	                polar.dataTable.setModel(data.dataModel);
 	                polar.summaryTable.setModel(data.summaryModel);
 	                polar.table.setModel(data.model);
+	                polar.heartTable.setModel(data.heartModel);
 	                polar.setData(data);
 	                frame.setVisible(false);
 					polar.GUI();

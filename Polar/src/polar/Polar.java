@@ -1,6 +1,7 @@
 package polar;
 
 import javax.swing.*;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import java.io.BufferedReader;
 import java.io.File;
@@ -76,6 +77,7 @@ public class Polar extends JFrame implements ActionListener, ChartMouseListener 
 	JTable dataTable = new JTable();
 	JTable summaryTable = new JTable();
 	JTable chunkTable = new JTable();
+	JTable heartTable = new JTable();
 	JPanel chunkPane = new JPanel();
 	JTextField text = new JTextField(5);
 	private static String REGEX = "\\[(.*?)\\]";
@@ -348,6 +350,23 @@ public class Polar extends JFrame implements ActionListener, ChartMouseListener 
 		chartPanel.addChartMouseListener(this);
 		chartPanel.addMouseListener(new CustomListener());
 		tabbedPane.addTab("Chart", chartPanel);
+		
+		DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+		centerRenderer.setHorizontalAlignment( JLabel.CENTER );
+		heartTable.getColumnModel().getColumn(0).setCellRenderer( centerRenderer );
+		heartTable.getColumnModel().getColumn(1).setCellRenderer( centerRenderer );
+		heartTable.getColumnModel().getColumn(2).setCellRenderer( centerRenderer );
+		heartTable.getColumnModel().getColumn(3).setCellRenderer( centerRenderer );
+		heartTable.getColumnModel().getColumn(4).setCellRenderer( centerRenderer );
+		
+		heartTable.setRowHeight(60);
+		heartTable.setPreferredScrollableViewportSize(heartTable.getPreferredSize());
+		heartTable.setBackground(Color.GRAY);
+		JScrollPane heartPanel = new JScrollPane(heartTable);
+		heartPanel.setPreferredSize(new Dimension(1600, 400));
+		tabbedPane.addTab("Heart", heartPanel);
+		
+		
 		// Display frame in the center of window
 		contain.add(tablePanel, BorderLayout.NORTH);
 		contain.add(bodyPanel, BorderLayout.SOUTH);
