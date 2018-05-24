@@ -323,12 +323,12 @@ public class Data {
 	public void summaryDate(int number1, int number2) {
 		// summary body data
 		if (existPowerBalance()) {
-			String[] columns1 = { "Total distance covered", "Average speed(KM/H)", "Maximum speed(KM/H)",
+			String[] columns1 = { "Start Time","End Time","Total distance covered", "Average speed(KM/H)", "Maximum speed(KM/H)",
 					"Average heart rate", "Maximum heart rate", "Minimum heart rate", "Average power", "Maximum power",
 					"Average altitude", "Maximum altitude", "PI", "Power Balance(LPB/RPB)", "NP", "IF", "TSS" };
 			summaryModel.setColumnIdentifiers(columns1);
 		} else {
-			String[] columns1 = { "Total distance covered", "Average speed(KM/H)", "Maximum speed(KM/H)",
+			String[] columns1 = { "Start Time","End Time","Total distance covered", "Average speed(KM/H)", "Maximum speed(KM/H)",
 					"Average heart rate", "Maximum heart rate", "Minimum heart rate", "Average power", "Maximum power",
 					"Average altitude", "Maximum altitude", "NP", "IF", "TSS" };
 			summaryModel.setColumnIdentifiers(columns1);
@@ -337,9 +337,9 @@ public class Data {
 		// Initialize
 		Object[] dataRow;
 		if (existPowerBalance())
-			dataRow = new Object[15];
+			dataRow = new Object[17];
 		else
-			dataRow = new Object[13];
+			dataRow = new Object[15];
 		int sumHeart = 0;
 		int sumPower = 0;
 		int sumSpeed = 0;
@@ -426,54 +426,59 @@ public class Data {
 		double maximumSpeed = maxSpeed;
 
 		double distance = (averageSpeed / 10) * length / 3600;
+		
+		// Start TIme
+		dataRow[0] = getTime(number1);
+		// End Time
+		dataRow[1] = getTime(number2);
 		// Total distance
-		dataRow[0] = df.format(distance);
+		dataRow[2] = df.format(distance);
 
 		// Average speed
-		dataRow[1] = Math.round((averageSpeed / 10) * 0.62);
+		dataRow[3] = Math.round((averageSpeed / 10) * 0.62);
 		// Maximum speed
-		dataRow[2] = Math.round((maximumSpeed / 10) * 0.62);
+		dataRow[4] = Math.round((maximumSpeed / 10) * 0.62);
 
 		// Average heart rate
-		dataRow[3] = Math.round(sumHeart / length);
+		dataRow[5] = Math.round(sumHeart / length);
 		// Maximum heart rate
-		dataRow[4] = maxHeart;
+		dataRow[6] = maxHeart;
 		// Minimum heart rate
-		dataRow[5] = minHeart;
+		dataRow[7] = minHeart;
 		// Average power
-		dataRow[6] = Math.round(sumPower / length);
+		dataRow[8] = Math.round(sumPower / length);
 		// Maximum power
-		dataRow[7] = maxPower;
+		dataRow[9] = maxPower;
 		// Average altitude
-		dataRow[8] = Math.round(sumAltitude / length);
+		dataRow[10] = Math.round(sumAltitude / length);
 		// Maximum altitude
-		dataRow[9] = maxAltitude;
+		dataRow[11] = maxAltitude;
 		if (existPowerBalance()) {
 			// PI
 			int PI = getPowerBalance(powerBalanceData).get("PI");
-			dataRow[10] = PI;
+			dataRow[12] = PI;
 			// Power Balance
 			String powerBalance = getPowerBalance(powerBalanceData).get("LPB").toString() + " / "
 					+ getPowerBalance(powerBalanceData).get("RPB").toString();
-			dataRow[11] = powerBalance;
+			dataRow[13] = powerBalance;
 
+			// NP
+			int NP = getNP(powerData);
+			dataRow[14] = NP;
+			// IF
+			double IF = getIF(NP, getFTP());
+			dataRow[15] = secondFormat.format(IF);
+			// TSS
+			dataRow[16] = getTSS(getTime(), NP, IF, getFTP());
+		} else {
 			// NP
 			int NP = getNP(powerData);
 			dataRow[12] = NP;
 			// IF
 			double IF = getIF(NP, getFTP());
-			dataRow[13] = secondFormat.format(IF);
+			dataRow[13] = df.format(IF);
 			// TSS
 			dataRow[14] = getTSS(getTime(), NP, IF, getFTP());
-		} else {
-			// NP
-			int NP = getNP(powerData);
-			dataRow[10] = NP;
-			// IF
-			double IF = getIF(NP, getFTP());
-			dataRow[11] = df.format(IF);
-			// TSS
-			dataRow[12] = getTSS(getTime(), NP, IF, getFTP());
 		}
 		summaryModel.addRow(dataRow);
 
@@ -488,12 +493,12 @@ public class Data {
 
 		// summary body data
 		if (existPowerBalance()) {
-			String[] columns1 = { "Distance covered", "Average speed(KM/H)", "Maximum speed(KM/H)",
+			String[] columns1 = { "Start Time","End Time","Distance covered", "Average speed(KM/H)", "Maximum speed(KM/H)",
 					"Average heart rate", "Maximum heart rate", "Minimum heart rate", "Average power", "Maximum power",
 					"Average altitude", "Maximum altitude", "PI", "Power Balance(LPB/RPB)", "NP", "IF", "TSS" };
 			chunkModel.setColumnIdentifiers(columns1);
 		} else {
-			String[] columns1 = { "Distance covered", "Average speed(KM/H)", "Maximum speed(KM/H)",
+			String[] columns1 = { "Start Time","End Time","Distance covered", "Average speed(KM/H)", "Maximum speed(KM/H)",
 					"Average heart rate", "Maximum heart rate", "Minimum heart rate", "Average power", "Maximum power",
 					"Average altitude", "Maximum altitude", "NP", "IF", "TSS" };
 			chunkModel.setColumnIdentifiers(columns1);
@@ -502,9 +507,9 @@ public class Data {
 		// Initialize
 		Object[] chunkRow;
 		if (existPowerBalance())
-			chunkRow = new Object[15];
+			chunkRow = new Object[17];
 		else
-			chunkRow = new Object[13];
+			chunkRow = new Object[15];
 		int sumHeart = 0;
 		int sumPower = 0;
 		int sumSpeed = 0;
@@ -592,54 +597,58 @@ public class Data {
 		double maximumSpeed = maxSpeed;
 
 		double distance = (averageSpeed / 10) * length / 3600;
+		// Start TIme
+				chunkRow[0] = getTime(number1);
+				// End Time
+				chunkRow[1] = getTime(number2);
 		// Total distance
-		chunkRow[0] = df.format(distance);
+		chunkRow[2] = df.format(distance);
 
 		// Average speed
-		chunkRow[1] = Math.round((averageSpeed / 10) * 0.62);
+		chunkRow[3] = Math.round((averageSpeed / 10) * 0.62);
 		// Maximum speed
-		chunkRow[2] = Math.round((maximumSpeed / 10) * 0.62);
+		chunkRow[4] = Math.round((maximumSpeed / 10) * 0.62);
 
 		// Average heart rate
-		chunkRow[3] = Math.round(sumHeart / length);
+		chunkRow[5] = Math.round(sumHeart / length);
 		// Maximum heart rate
-		chunkRow[4] = maxHeart;
+		chunkRow[6] = maxHeart;
 		// Minimum heart rate
-		chunkRow[5] = minHeart;
+		chunkRow[7] = minHeart;
 		// Average power
-		chunkRow[6] = Math.round(sumPower / length);
+		chunkRow[8] = Math.round(sumPower / length);
 		// Maximum power
-		chunkRow[7] = maxPower;
+		chunkRow[9] = maxPower;
 		// Average altitude
-		chunkRow[8] = Math.round(sumAltitude / length);
+		chunkRow[10] = Math.round(sumAltitude / length);
 		// Maximum altitude
-		chunkRow[9] = maxAltitude;
+		chunkRow[11] = maxAltitude;
 		if (existPowerBalance()) {
 			// PI
 			int PI = getPowerBalance(powerBalanceData).get("PI");
-			chunkRow[10] = PI;
+			chunkRow[12] = PI;
 			// Power Balance
 			String powerBalance1 = getPowerBalance(powerBalanceData).get("LPB").toString() + " / "
 					+ getPowerBalance(powerBalanceData).get("RPB").toString();
-			chunkRow[11] = powerBalance1;
+			chunkRow[13] = powerBalance1;
 
+			// NP
+			int NP = getNP(powerData);
+			chunkRow[14] = NP;
+			// IF
+			double IF = getIF(NP, getFTP());
+			chunkRow[15] = secondFormat.format(IF);
+			// TSS
+			chunkRow[16] = getTSS(getTime(), NP, IF, getFTP());
+		} else {
 			// NP
 			int NP = getNP(powerData);
 			chunkRow[12] = NP;
 			// IF
 			double IF = getIF(NP, getFTP());
-			chunkRow[13] = secondFormat.format(IF);
+			chunkRow[13] = df.format(IF);
 			// TSS
 			chunkRow[14] = getTSS(getTime(), NP, IF, getFTP());
-		} else {
-			// NP
-			int NP = getNP(powerData);
-			chunkRow[10] = NP;
-			// IF
-			double IF = getIF(NP, getFTP());
-			chunkRow[11] = df.format(IF);
-			// TSS
-			chunkRow[12] = getTSS(getTime(), NP, IF, getFTP());
 		}
 		chunkModel.addRow(chunkRow);
 
@@ -1268,5 +1277,33 @@ public class Data {
 		calculate = hour * 3600 + minute * 60 + second;
 		return calculate;
 	}
+	/**
+	 * calculate time of the point position
+	 * @param point
+	 * @return
+	 */
+		public String getTime(int point) {
+			int hour, minute, second;
+			second = (point % 3600) % 60;
+			minute = ((point % 3600) - second) / 60;
+			hour = (point - point % 3600) / 3600;
+			String stringSecond, stringMinute, stringHour;
+			// second
+			if (second < 10)
+				stringSecond = "0" + second;
+			else
+				stringSecond = String.valueOf(second);
+			// minute
+			if (minute < 10)
+				stringMinute = "0" + minute;
+			else
+				stringMinute = String.valueOf(minute);
+			// hour
+			if (hour < 10)
+				stringHour = "0" + hour;
+			else
+				stringHour = String.valueOf(hour);
+			return stringHour + ":" + stringMinute + ":" + stringSecond;
+		}
 
 }
